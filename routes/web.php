@@ -49,7 +49,7 @@ Route::post('orders', [OrderController::class, 'store'])
 Route::post('api/orders/search', [OrderController::class, 'searchByEmail'])
     ->name('orders.search');
 
-// Chat routesss
+// Chat routess s
 Route::get('chat', [\App\Http\Controllers\ChatController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('chat');

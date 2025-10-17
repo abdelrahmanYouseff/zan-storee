@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Visitor;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -18,12 +19,26 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // Visitor statistics
+        $totalVisitors = Visitor::getTotalVisitors();
+        $totalVisits = Visitor::getTotalVisits();
+        $todayVisitors = Visitor::getTodayVisitors();
+        $todayVisits = Visitor::getTodayVisits();
+        $deviceStats = Visitor::getByDeviceType();
+        $recentVisitors = Visitor::getRecent(10);
+
         return Inertia::render('Dashboard', [
             'stats' => [
                 'totalOrders' => $totalOrders,
                 'totalRevenue' => $totalRevenue,
+                'totalVisitors' => $totalVisitors,
+                'totalVisits' => $totalVisits,
+                'todayVisitors' => $todayVisitors,
+                'todayVisits' => $todayVisits,
             ],
             'recentOrders' => $recentOrders,
+            'deviceStats' => $deviceStats,
+            'recentVisitors' => $recentVisitors,
         ]);
     }
 }

@@ -37,12 +37,34 @@ interface Order {
     created_at: string;
 }
 
+interface Visitor {
+    id: number;
+    ip_address: string;
+    country?: string;
+    city?: string;
+    device_type?: string;
+    browser?: string;
+    page_url?: string;
+    created_at: string;
+}
+
+interface DeviceStat {
+    device_type: string;
+    count: number;
+}
+
 interface Props {
     stats: {
         totalOrders: number;
         totalRevenue: number;
+        totalVisitors: number;
+        totalVisits: number;
+        todayVisitors: number;
+        todayVisits: number;
     };
     recentOrders: Order[];
+    deviceStats: DeviceStat[];
+    recentVisitors: Visitor[];
 }
 
 const props = defineProps<Props>();
@@ -102,6 +124,32 @@ const getStatusBadgeVariant = (status: string) => {
 
             <!-- Stats Cards -->
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle class="text-sm font-medium">Total Visitors</CardTitle>
+                        <Users class="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div class="text-2xl font-bold">{{ stats.totalVisitors }}</div>
+                        <p class="text-xs text-muted-foreground">
+                            Unique visitors
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle class="text-sm font-medium">Total Visits</CardTitle>
+                        <Eye class="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div class="text-2xl font-bold">{{ stats.totalVisits }}</div>
+                        <p class="text-xs text-muted-foreground">
+                            All page views
+                        </p>
+                    </CardContent>
+                </Card>
+
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle class="text-sm font-medium">Total Orders</CardTitle>
@@ -219,6 +267,56 @@ const getStatusBadgeVariant = (status: string) => {
                                     </TableCell>
                                     <TableCell class="text-sm text-muted-foreground">
                                         {{ formatDate(order.created_at) }}
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <!-- Recent Visitors Table -->
+            <Card>
+                <CardHeader>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <CardTitle>Recent Visitors</CardTitle>
+                            <CardDescription>
+                                Latest visitors to your website
+                            </CardDescription>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div class="rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>IP Address</TableHead>
+                                    <TableHead>Device</TableHead>
+                                    <TableHead>Browser</TableHead>
+                                    <TableHead>Page</TableHead>
+                                    <TableHead>Visit Time</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow v-for="visitor in recentVisitors" :key="visitor.id">
+                                    <TableCell class="font-medium">
+                                        {{ visitor.ip_address }}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline">
+                                            {{ visitor.device_type || 'Unknown' }}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell class="text-sm">
+                                        {{ visitor.browser || 'Unknown' }}
+                                    </TableCell>
+                                    <TableCell class="text-sm text-muted-foreground max-w-xs truncate">
+                                        {{ visitor.page_url || '/' }}
+                                    </TableCell>
+                                    <TableCell class="text-sm text-muted-foreground">
+                                        {{ formatDate(visitor.created_at) }}
                                     </TableCell>
                                 </TableRow>
                             </TableBody>

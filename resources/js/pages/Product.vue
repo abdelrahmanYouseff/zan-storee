@@ -623,7 +623,7 @@ const fetchTimerStatus = async () => {
     try {
         const response = await fetch('/api/timer/status');
         const data = await response.json();
-        
+
         if (data.success) {
             timerIsActive.value = data.timer.is_active;
             timerEndTime.value = new Date(data.timer.end_time);
@@ -637,14 +637,14 @@ const fetchTimerStatus = async () => {
 onMounted(() => {
     // Fetch timer status from database
     fetchTimerStatus();
-    
+
     timerInterval = setInterval(updateTimer, 1000);
 
     // Detect user's currency with delay to ensure DOM is ready
     setTimeout(() => {
         detectUserCurrency();
     }, 100);
-    
+
     // Start polling for admin responses
     startAdminPolling();
 
@@ -933,10 +933,7 @@ const reviews = [
 
                         <!-- Checkout Button -->
                         <div class="mb-6 sm:mb-8">
-                            <button @click="openCheckout" class="w-full bg-[#0071e3] dark:bg-[#0a84ff] hover:bg-[#0077ed] dark:hover:bg-[#0a84ff] text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
-                                </svg>
+                            <button @click="openCheckout" class="w-full bg-[#1d1d1f] dark:bg-[#1d1d1f] hover:bg-[#2d2d2d] dark:hover:bg-[#2d2d2d] text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center">
                                 <span>Proceed to Checkout</span>
                             </button>
                         </div>

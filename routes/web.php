@@ -74,5 +74,9 @@ Route::get('api/chat/unread-count', [\App\Http\Controllers\ChatController::class
 Route::delete('api/chat/{sessionId}', [\App\Http\Controllers\ChatController::class, 'deleteSession'])
     ->middleware(['auth', 'verified']);
 
+// Timer routes
+Route::get('api/timer/status', [\App\Http\Controllers\TimerController::class, 'getStatus'])
+    ->name('timer.status');
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

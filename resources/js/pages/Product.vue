@@ -587,21 +587,25 @@ const loadPayPalButtons = () => {
 
 // Timer functionality
 const timeLeft = ref({
-    days: 5,
+    days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0
 });
 
+const timerIsActive = ref(true);
+let timerEndTime = ref<Date | null>(null);
+
 let timerInterval: NodeJS.Timeout | null = null;
 
 const updateTimer = () => {
-    const now = new Date().getTime();
-    const endTime = now + (timeLeft.value.days * 24 * 60 * 60 * 1000) +
-                          (timeLeft.value.hours * 60 * 60 * 1000) +
-                          (timeLeft.value.minutes * 60 * 1000) +
-                          (timeLeft.value.seconds * 1000);
+    if (!timerIsActive.value || !timerEndTime.value) {
+        timeLeft.value = { days: 0, hours: 0, minutes: 0, seconds: 0 };
+        return;
+    }
 
+    const now = new Date().getTime();
+    const endTime = new Date(timerEndTime.value).getTime();
     const distance = endTime - now;
 
     if (distance > 0) {
@@ -611,20 +615,36 @@ const updateTimer = () => {
         timeLeft.value.seconds = Math.floor((distance % (1000 * 60)) / 1000);
     } else {
         timeLeft.value = { days: 0, hours: 0, minutes: 0, seconds: 0 };
-        if (timerInterval) {
-            clearInterval(timerInterval);
+    }
+};
+
+// Fetch timer status from server
+const fetchTimerStatus = async () => {
+    try {
+        const response = await fetch('/api/timer/status');
+        const data = await response.json();
+        
+        if (data.success) {
+            timerIsActive.value = data.timer.is_active;
+            timerEndTime.value = new Date(data.timer.end_time);
+            updateTimer();
         }
+    } catch (error) {
+        console.error('Error fetching timer status:', error);
     }
 };
 
 onMounted(() => {
+    // Fetch timer status from database
+    fetchTimerStatus();
+    
     timerInterval = setInterval(updateTimer, 1000);
 
     // Detect user's currency with delay to ensure DOM is ready
     setTimeout(() => {
         detectUserCurrency();
     }, 100);
-
+    
     // Start polling for admin responses
     startAdminPolling();
 

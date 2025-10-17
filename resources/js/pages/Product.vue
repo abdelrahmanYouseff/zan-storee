@@ -710,12 +710,12 @@ const product = {
     newPrice: 559,
     discount: 50,
     images: [
-        'http://127.0.0.1:8001/images/orange_1.png',
-        'http://127.0.0.1:8001/images/orange_2.png',
-        'http://127.0.0.1:8001/images/blue_1.png',
-        'http://127.0.0.1:8001/images/blue_2.png',
-        'http://127.0.0.1:8001/images/white_1.png',
-        'http://127.0.0.1:8001/images/white_2.png'
+        '/images/orange_1.png',
+        '/images/orange_2.png',
+        '/images/blue_1.png',
+        '/images/blue_2.png',
+        '/images/white_1.png',
+        '/images/white_2.png'
     ]
 };
 
@@ -758,7 +758,7 @@ const reviews = [
 <template>
     <Head title="Zan Store" />
 
-    <div class="min-h-screen bg-[#fbfbfd] dark:bg-[#000000]">
+    <div class="min-h-screen bg-white dark:bg-white">
         <!-- Navigation -->
         <nav class="fixed top-0 left-0 right-0 z-50 backdrop-blur-2xl bg-[#fbfbfd]/80 dark:bg-[#000000]/80 border-b border-[#d2d2d7]/30 dark:border-[#424245]/30">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

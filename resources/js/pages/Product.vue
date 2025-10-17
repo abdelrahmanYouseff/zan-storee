@@ -635,6 +635,9 @@ const fetchTimerStatus = async () => {
 };
 
 onMounted(() => {
+    // Force light mode - remove dark class
+    document.documentElement.classList.remove('dark');
+
     // Fetch timer status from database
     fetchTimerStatus();
 
@@ -1469,6 +1472,20 @@ html {
 /* PayPal container styling */
 #paypal-container-7WMANWRCHP896 {
     min-height: 50px;
+}
+
+/* Force light mode on mobile and all devices */
+html {
+    color-scheme: light !important;
+}
+
+html.dark {
+    color-scheme: light !important;
+}
+
+/* Override all dark mode styles */
+.dark * {
+    color-scheme: light !important;
 }
 </style>
 

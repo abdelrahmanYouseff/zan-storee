@@ -687,7 +687,7 @@ onUnmounted(() => {
 });
 
 const product = {
-    name: 'Premium Wireless Headphones',
+    name: 'Zan Store',
     tagline: 'Studio-quality sound. Elevated comfort.',
     description: 'Experience unprecedented audio clarity with our flagship wireless headphones. Featuring advanced noise cancellation, 40-hour battery life, and premium materials crafted for all-day comfort.',
     features: [
@@ -756,7 +756,7 @@ const reviews = [
 </script>
 
 <template>
-    <Head title="Premium Wireless Headphones" />
+    <Head title="Zan Store" />
 
     <div class="min-h-screen bg-[#fbfbfd] dark:bg-[#000000]">
         <!-- Navigation -->

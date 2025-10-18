@@ -860,56 +860,33 @@ const reviews = computed(() => {
         <!-- Header -->
         <header class="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
             <div class="container mx-auto px-4">
-                <div class="flex h-16 items-center justify-between">
+                <div class="flex h-16 items-center">
                     <!-- Mobile Menu Button -->
                     <button @click="toggleMobileMenu" class="md:hidden inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 transition-colors">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
-                        </button>
+                    </button>
 
                     <!-- Logo -->
-                    <a href="/" class="flex items-center gap-3">
+                    <a href="/" class="flex items-center gap-3 md:mr-auto">
                         <span class="text-xl font-semibold">Zan Store</span>
                         <img src="/images/partner.png" alt="Partner" class="h-8" />
                     </a>
 
-        <!-- Navigation -->
-                    <nav class="hidden md:flex items-center gap-6">
+                    <!-- Navigation - Centered -->
+                    <nav class="hidden md:flex items-center gap-6 absolute left-1/2 transform -translate-x-1/2">
                         <a href="/" class="text-sm font-medium hover:text-purple-600 transition-colors">
                             Home
                         </a>
                         <a href="/#products" class="text-sm font-medium hover:text-purple-600 transition-colors">
                             Products
                         </a>
-        </nav>
-
-                    <!-- Actions -->
-                    <div class="flex items-center gap-2">
-                        <!-- Search Button -->
-                        <button class="hidden md:inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 transition-colors">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
+                        <button @click="toggleChat" class="text-sm font-medium hover:text-purple-600 transition-colors">
+                            Support
                         </button>
+                    </nav>
 
-                        <!-- User Button -->
-                        <button class="inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 transition-colors">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                        </button>
-
-                        <!-- Cart Button -->
-                        <button class="inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 transition-colors relative">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                            </svg>
-                            <span class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-purple-600 text-white text-xs flex items-center justify-center font-medium">
-                                {{ cartCount }}
-                            </span>
-                        </button>
-                    </div>
                 </div>
 
                 <!-- Mobile Menu -->
@@ -921,8 +898,11 @@ const reviews = computed(() => {
                         <a href="/#products" class="text-sm font-medium hover:text-purple-600 transition-colors py-2">
                             Products
                         </a>
+                        <button @click="toggleChat" class="text-sm font-medium hover:text-purple-600 transition-colors py-2 text-left">
+                            Support
+                        </button>
                     </nav>
-                    </div>
+                </div>
                 </div>
         </header>
 

@@ -228,7 +228,7 @@ const deleteSession = async (sessionId: string) => {
                         <div @click="selectSession(session.session_id)" class="cursor-pointer">
                             <div class="flex items-start justify-between mb-1">
                                 <div class="flex items-center space-x-2">
-                                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                                    <div class="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white font-semibold">
                                         {{ session.customer_email.charAt(0).toUpperCase() }}
                                     </div>
                                     <div class="flex-1 min-w-0">
@@ -277,7 +277,7 @@ const deleteSession = async (sessionId: string) => {
                 <div v-if="selectedSession" class="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            <div class="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white font-semibold">
                                 {{ selectedSessionData?.customer_email.charAt(0).toUpperCase() }}
                             </div>
                             <div>

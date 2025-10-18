@@ -66,7 +66,7 @@ const features = [
         <!-- Header -->
         <header class="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
             <div class="container mx-auto px-4">
-                <div class="flex h-16 items-center justify-between">
+                <div class="flex h-16 items-center">
                     <!-- Mobile Menu Button -->
                     <button @click="toggleMobileMenu" class="md:hidden inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 transition-colors">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,47 +75,24 @@ const features = [
                     </button>
 
                     <!-- Logo -->
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 md:mr-auto">
                         <span class="text-xl font-semibold">Zan Store</span>
                         <img src="/images/partner.png" alt="Partner" class="h-8" />
                     </div>
 
-                    <!-- Navigation -->
-                    <nav class="hidden md:flex items-center gap-6">
+                    <!-- Navigation - Centered -->
+                    <nav class="hidden md:flex items-center gap-6 absolute left-1/2 transform -translate-x-1/2">
                         <a href="#home" class="text-sm font-medium hover:text-purple-600 transition-colors">
                             Home
                         </a>
                         <a href="#products" class="text-sm font-medium hover:text-purple-600 transition-colors">
                             Products
                         </a>
+                        <button @click="toggleChat" class="text-sm font-medium hover:text-purple-600 transition-colors">
+                            Support
+                        </button>
                     </nav>
 
-                    <!-- Actions -->
-                    <div class="flex items-center gap-2">
-                        <!-- Search Button -->
-                        <button class="hidden md:inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 transition-colors">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
-                        </button>
-
-                        <!-- User Button -->
-                        <button class="inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 transition-colors">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                        </button>
-
-                        <!-- Cart Button -->
-                        <button class="inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 transition-colors relative">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                            </svg>
-                            <span class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-purple-600 text-white text-xs flex items-center justify-center font-medium">
-                                {{ cartCount }}
-                            </span>
-                        </button>
-                    </div>
                 </div>
 
                 <!-- Mobile Menu -->
@@ -127,6 +104,9 @@ const features = [
                         <a href="#products" class="text-sm font-medium hover:text-purple-600 transition-colors py-2">
                             Products
                         </a>
+                        <button @click="toggleChat" class="text-sm font-medium hover:text-purple-600 transition-colors py-2 text-left">
+                            Support
+                        </button>
                     </nav>
                 </div>
             </div>
@@ -341,7 +321,7 @@ const features = [
         <!-- Chatbot Icon -->
         <button
             @click="toggleChat"
-            class="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-50 group"
+            class="fixed bottom-6 right-6 w-14 h-14 bg-black hover:bg-gray-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-50 group"
         >
             <svg v-if="!isChatOpen" class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
@@ -359,7 +339,7 @@ const features = [
             :class="isChatOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'"
         >
             <!-- Chat Header -->
-            <div class="bg-gradient-to-r from-purple-600 to-blue-500 p-5 text-white">
+            <div class="bg-black p-5 text-white">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">

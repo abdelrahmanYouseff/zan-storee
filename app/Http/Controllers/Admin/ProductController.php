@@ -84,8 +84,8 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
-            'main_image' => 'required|string',
-            'secondary_images' => 'nullable|array',
+            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'secondary_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'features' => 'nullable|array',
             'colors' => 'nullable|array',
             'quantity' => 'required|integer|min:0',
@@ -93,6 +93,31 @@ class ProductController extends Controller
             'price_after' => 'required|numeric|min:0',
             'is_active' => 'boolean'
         ]);
+
+        // Handle main image upload if new image provided
+        if ($request->hasFile('main_image')) {
+            $mainImage = $request->file('main_image');
+            $mainImageName = time() . '_main_' . $mainImage->getClientOriginalName();
+            $mainImage->move(public_path('images'), $mainImageName);
+            $validated['main_image'] = '/images/' . $mainImageName;
+        } else {
+            // Keep existing main image
+            unset($validated['main_image']);
+        }
+
+        // Handle secondary images upload if new images provided
+        if ($request->hasFile('secondary_images')) {
+            $secondaryImages = $product->secondary_images ?? [];
+            foreach ($request->file('secondary_images') as $index => $image) {
+                $imageName = time() . '_secondary_' . $index . '_' . $image->getClientOriginalName();
+                $image->move(public_path('images'), $imageName);
+                $secondaryImages[] = '/images/' . $imageName;
+            }
+            $validated['secondary_images'] = $secondaryImages;
+        } else {
+            // Keep existing secondary images
+            unset($validated['secondary_images']);
+        }
 
         $product->update($validated);
 

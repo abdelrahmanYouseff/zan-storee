@@ -169,7 +169,7 @@ const deleteProduct = (productId: number) => {
                                                     <Eye class="h-4 w-4" />
                                                 </Link>
                                             </Button>
-                                            <Button variant="ghost" size="sm">
+                                            <Button variant="ghost" size="sm" as="a" :href="`/dashboard/products/${product.id}/edit`">
                                                 <Edit class="h-4 w-4" />
                                             </Button>
                                             <Button

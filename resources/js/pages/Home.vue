@@ -414,5 +414,120 @@ const features = [
 * {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+/* Force consistent fonts and colors across all devices */
+* {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+/* Ensure text colors are consistent */
+.text-gray-900 {
+    color: #111827 !important;
+}
+
+.text-gray-600 {
+    color: #4b5563 !important;
+}
+
+.text-gray-400 {
+    color: #9ca3af !important;
+}
+
+.text-white {
+    color: #ffffff !important;
+}
+
+.text-purple-600 {
+    color: #9333ea !important;
+}
+
+.text-green-600 {
+    color: #059669 !important;
+}
+
+.text-orange-400 {
+    color: #fb923c !important;
+}
+
+.text-orange-200 {
+    color: #fed7aa !important;
+}
+
+/* Ensure font weights are consistent */
+.font-semibold {
+    font-weight: 600 !important;
+}
+
+.font-bold {
+    font-weight: 700 !important;
+}
+
+.font-medium {
+    font-weight: 500 !important;
+}
+
+/* Ensure font sizes are consistent */
+.text-xs {
+    font-size: 0.75rem !important;
+    line-height: 1rem !important;
+}
+
+.text-sm {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+}
+
+.text-lg {
+    font-size: 1.125rem !important;
+    line-height: 1.75rem !important;
+}
+
+.text-xl {
+    font-size: 1.25rem !important;
+    line-height: 1.75rem !important;
+}
+
+.text-2xl {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+}
+
+.text-3xl {
+    font-size: 1.875rem !important;
+    line-height: 2.25rem !important;
+}
+
+.text-4xl {
+    font-size: 2.25rem !important;
+    line-height: 2.5rem !important;
+}
+
+.text-6xl {
+    font-size: 3.75rem !important;
+    line-height: 1 !important;
+}
+
+/* Mobile specific adjustments */
+@media (max-width: 768px) {
+    .text-4xl {
+        font-size: 2rem !important;
+        line-height: 2.25rem !important;
+    }
+    
+    .text-6xl {
+        font-size: 2.5rem !important;
+        line-height: 2.75rem !important;
+    }
+    
+    .text-3xl {
+        font-size: 1.5rem !important;
+        line-height: 2rem !important;
+    }
+    
+    .text-2xl {
+        font-size: 1.25rem !important;
+        line-height: 1.75rem !important;
+    }
+}
 </style>
 

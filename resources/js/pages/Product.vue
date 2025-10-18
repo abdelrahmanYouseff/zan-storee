@@ -2,6 +2,23 @@
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
 import { Head } from '@inertiajs/vue3';
 
+// Define props
+const props = defineProps<{
+    product?: {
+        id: number;
+        name: string;
+        description: string;
+        mainImage: string;
+        secondaryImages: string[];
+        features: string[];
+        colors: string[];
+        quantity: number;
+        priceBefore: number;
+        priceAfter: number;
+        discount: number;
+    };
+}>();
+
 // PayPal types
 declare global {
     interface Window {
@@ -13,6 +30,8 @@ const selectedImage = ref(0);
 const quantity = ref(1);
 const isChatOpen = ref(false);
 const isCheckoutOpen = ref(false);
+const isMobileMenuOpen = ref(false);
+const cartCount = ref(3);
 const checkoutForm = ref({
     customer_name: '',
     customer_email: '',
@@ -46,21 +65,50 @@ const currencySymbols = {
     AUD: 'A$'
 };
 
+// Color mapping to hex codes
+const getColorCode = (colorName: string) => {
+    const colorMap: { [key: string]: string } = {
+        'Orange': '#fa8b4b',
+        'Gray': '#4a4d5e',
+        'Grey': '#4a4d5e',
+        'White': '#f5f5f5',
+        'Black': '#1d1d1f',
+        'Blue': '#0071e3',
+        'Red': '#ff3b30',
+        'Green': '#34c759',
+        'Yellow': '#ffcc00',
+        'Purple': '#9b59b6',
+        'Pink': '#ff2d55',
+        'Deep Purple': '#5e3c99',
+        'Gold': '#ffd700',
+        'Silver': '#c0c0c0',
+        'Space Gray': '#535150',
+        'Midnight': '#1d1d1f',
+        'Starlight': '#f5f5f0',
+        'Rose Gold': '#b76e79'
+    };
+
+    // If color name matches a key, return the hex code
+    if (colorMap[colorName]) {
+        return colorMap[colorName];
+    }
+
+    // If it's already a hex color, return it
+    if (colorName.startsWith('#')) {
+        return colorName;
+    }
+
+    // Default to a random color based on the name
+    return '#' + colorName.split('').reduce((acc, char) => {
+        return (acc + char.charCodeAt(0)).toString(16).slice(-6).padStart(6, '0');
+    }, '').slice(0, 6);
+};
+
 // Color selection functionality
 const selectColor = (colorName: string) => {
-    switch(colorName) {
-        case 'Orange':
-            selectedImage.value = 0; // orange_1.png
-            break;
-        case 'Gray':
-            selectedImage.value = 2; // blue_1.png
-            break;
-        case 'White':
-            selectedImage.value = 4; // white_1.png
-            break;
-        default:
-            selectedImage.value = 0;
-    }
+    // For now, just select the first image when color is clicked
+    // You can enhance this to switch between different color images
+    selectedImage.value = 0;
 };
 
 // Quantity functionality
@@ -87,19 +135,19 @@ const formatPrice = (price: number) => {
 
 // Computed total price
 const totalPrice = computed(() => {
-    return convertPrice(product.newPrice * quantity.value);
+    return convertPrice(productData.value.priceAfter * quantity.value);
 });
 
 const oldTotalPrice = computed(() => {
-    return convertPrice(product.oldPrice * quantity.value);
+    return convertPrice(productData.value.priceBefore * quantity.value);
 });
 
 const newPriceConverted = computed(() => {
-    return convertPrice(product.newPrice);
+    return convertPrice(productData.value.priceAfter);
 });
 
 const oldPriceConverted = computed(() => {
-    return convertPrice(product.oldPrice);
+    return convertPrice(productData.value.priceBefore);
 });
 
 // Detect user's country and set currency
@@ -201,6 +249,10 @@ const toggleChat = () => {
             scrollToBottom();
         });
     }
+};
+
+const toggleMobileMenu = () => {
+    isMobileMenuOpen.value = !isMobileMenuOpen.value;
 };
 
 // Chat messages state
@@ -560,7 +612,7 @@ const loadPayPalButtons = () => {
                         product_name: 'iPhone 17 Pro Max 512GB',
                         product_color: getSelectedColor(),
                         quantity: quantity.value,
-                        unit_price: product.newPrice,
+                        unit_price: productData.value.priceAfter,
                         total_amount: totalPrice.value
                     }));
                 });
@@ -689,10 +741,21 @@ onUnmounted(() => {
     stopAdminPolling();
 });
 
-const product = {
-    name: 'Zan Store',
-    tagline: 'Studio-quality sound. Elevated comfort.',
+// Use product data from props or fallback to default
+const productData = computed(() => {
+    if (!props.product) {
+        return {
+            id: 1,
+            name: 'Zan Store',
     description: 'Experience unprecedented audio clarity with our flagship wireless headphones. Featuring advanced noise cancellation, 40-hour battery life, and premium materials crafted for all-day comfort.',
+            mainImage: '/images/orange_2.png',
+            secondaryImages: [
+                '/images/orange_1.png',
+                '/images/blue_1.png',
+                '/images/blue_2.png',
+                '/images/white_1.png',
+                '/images/white_2.png'
+            ],
     features: [
         'Active Noise Cancellation',
         'Spatial Audio with dynamic head tracking',
@@ -701,98 +764,167 @@ const product = {
         'Hi-Res Audio certified',
         'Multipoint Bluetooth connectivity'
     ],
-    specs: [
+            colors: ['Orange', 'Gray', 'White'],
+            quantity: 100,
+            priceBefore: 1119,
+            priceAfter: 559,
+            discount: 50
+        };
+    }
+    return props.product;
+});
+
+// Create images array combining main and secondary images
+const productImages = computed(() => {
+    const data = productData.value;
+    if (!data) return [];
+
+    const images = [data.mainImage];
+    if (data.secondaryImages && data.secondaryImages.length > 0) {
+        images.push(...data.secondaryImages);
+    }
+    return images;
+});
+
+// Static data for specs (can be made dynamic later)
+const specs = [
         { label: 'Driver Size', value: '40mm' },
         { label: 'Frequency Response', value: '20Hz - 40kHz' },
         { label: 'Impedance', value: '32 Ohms' },
         { label: 'Weight', value: '250g' },
         { label: 'Connectivity', value: 'Bluetooth 5.3, USB-C' },
         { label: 'Warranty', value: '2 Years' }
-    ],
-    oldPrice: 1119,
-    newPrice: 559,
-    discount: 50,
-    images: [
-        '/images/orange_1.png',
-        '/images/orange_2.png',
-        '/images/blue_1.png',
-        '/images/blue_2.png',
-        '/images/white_1.png',
-        '/images/white_2.png'
-    ]
+];
+
+// Generate dynamic reviews based on product name
+const generateReviews = (productName: string) => {
+    const reviewers = [
+        { name: 'Sarah Mitchell', gender: 'female' },
+        { name: 'James Rodriguez', gender: 'male' },
+        { name: 'Emily Chen', gender: 'female' },
+        { name: 'Michael Brown', gender: 'male' },
+        { name: 'Ahmed Hassan', gender: 'male' },
+        { name: 'Fatima Ali', gender: 'female' },
+        { name: 'David Kim', gender: 'male' },
+        { name: 'Sofia Martinez', gender: 'female' }
+    ];
+
+    const positiveTemplates = [
+        {
+        title: 'Absolutely Outstanding',
+            comment: `The ${productName} exceeded all my expectations! The quality is exceptional and performance is top-notch. Highly recommend this product to anyone looking for the best.`
+        },
+        {
+            title: 'Best Purchase This Year',
+            comment: `I'm so happy with my ${productName}! The build quality is premium and it works flawlessly. Worth every penny and I would buy it again.`
+        },
+        {
+            title: 'Professional Grade Quality',
+            comment: `As someone who needs reliable products, the ${productName} delivers perfectly. The features are exactly what I needed and the quality is outstanding.`
+        },
+        {
+            title: 'Highly Recommended',
+            comment: `The ${productName} is amazing! Everything about it is well-designed and functional. Great value for money and excellent performance.`
+        }
+    ];
+
+    const shuffledReviewers = [...reviewers].sort(() => Math.random() - 0.5).slice(0, 4);
+    const shuffledTemplates = [...positiveTemplates].sort(() => Math.random() - 0.5);
+
+    return shuffledReviewers.map((reviewer, index) => {
+        const template = shuffledTemplates[index % shuffledTemplates.length];
+        const daysAgo = Math.floor(Math.random() * 30) + 1;
+        const date = new Date();
+        date.setDate(date.getDate() - daysAgo);
+
+        return {
+            name: reviewer.name,
+            rating: Math.random() > 0.2 ? 5 : 4, // 80% 5-star, 20% 4-star
+            date: date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+            title: template.title,
+            comment: template.comment,
+            verified: true
+        };
+    });
 };
 
-const reviews = [
-    {
-        name: 'Sarah Mitchell',
-        rating: 5,
-        date: 'October 12, 2025',
-        title: 'Absolutely Outstanding',
-        comment: 'These headphones exceeded all my expectations. The sound quality is pristine, and the noise cancellation is the best I\'ve experienced. Worth every penny.',
-        verified: true
-    },
-    {
-        name: 'James Rodriguez',
-        rating: 5,
-        date: 'October 8, 2025',
-        title: 'Professional Grade Quality',
-        comment: 'As a music producer, I need accurate sound reproduction. These deliver flawlessly. The comfort level is also exceptional for long studio sessions.',
-        verified: true
-    },
-    {
-        name: 'Emily Chen',
-        rating: 5,
-        date: 'October 5, 2025',
-        title: 'Best Purchase This Year',
-        comment: 'The build quality feels premium in every way. Battery life is incredible, and the spatial audio feature is mind-blowing. Highly recommended!',
-        verified: true
-    },
-    {
-        name: 'Michael Brown',
-        rating: 4,
-        date: 'October 1, 2025',
-        title: 'Impressive Performance',
-        comment: 'Really great headphones with fantastic sound. Only minor complaint is the case could be more compact, but that\'s nitpicking.',
-        verified: true
-    }
-];
+const reviews = computed(() => {
+    return generateReviews(productData.value.name || 'Product');
+});
 </script>
 
 <template>
     <Head title="Zan Store" />
 
-    <div class="min-h-screen bg-white dark:bg-white">
+    <div class="min-h-screen bg-white">
+        <!-- Header -->
+        <header class="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+            <div class="container mx-auto px-4">
+                <div class="flex h-16 items-center justify-between">
+                    <!-- Mobile Menu Button -->
+                    <button @click="toggleMobileMenu" class="md:hidden inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 transition-colors">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                        </button>
+
+                    <!-- Logo -->
+                    <a href="/" class="flex items-center gap-3">
+                        <span class="text-xl font-semibold">Zan Store</span>
+                        <img src="/images/partner.png" alt="Partner" class="h-8" />
+                    </a>
+
         <!-- Navigation -->
-        <nav class="fixed top-0 left-0 right-0 z-50 backdrop-blur-2xl bg-[#fbfbfd]/80 dark:bg-[#000000]/80 border-b border-[#d2d2d7]/30 dark:border-[#424245]/30">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-14 sm:h-16">
-                    <div class="flex items-center space-x-6 sm:space-x-8">
-                        <a href="/" class="text-lg sm:text-xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">
-                            Zan Store
+                    <nav class="hidden md:flex items-center gap-6">
+                        <a href="/" class="text-sm font-medium hover:text-purple-600 transition-colors">
+                            Home
                         </a>
-                    </div>
-                    <div class="flex items-center space-x-4 sm:space-x-6">
-                        <!-- Currency Display -->
-                        <div class="flex items-center space-x-2">
-                            <div class="text-xs text-[#86868b] dark:text-[#6e6e73]">
-                                {{ userCurrency }} {{ currencySymbols[userCurrency] }}
-                            </div>
-                            <select @change="setCurrency(($event.target as HTMLSelectElement).value)" :value="userCurrency" class="text-xs bg-transparent border border-[#d2d2d7] dark:border-[#424245] rounded px-2 py-1 text-[#1d1d1f] dark:text-[#f5f5f7]">
-                                <option value="USD">USD</option>
-                                <option value="SAR">SAR</option>
-                                <option value="EGP">EGP</option>
-                                <option value="AED">AED</option>
-                                <option value="EUR">EUR</option>
-                                <option value="GBP">GBP</option>
-                            </select>
-                        </div>
-                        <button @click="toggleChat" class="text-xs sm:text-sm text-[#1d1d1f] dark:text-[#f5f5f7] hover:text-[#06c] dark:hover:text-[#2997ff] transition-colors">
-                            Support
+                        <a href="/#products" class="text-sm font-medium hover:text-purple-600 transition-colors">
+                            Products
+                        </a>
+        </nav>
+
+                    <!-- Actions -->
+                    <div class="flex items-center gap-2">
+                        <!-- Search Button -->
+                        <button class="hidden md:inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 transition-colors">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </button>
+
+                        <!-- User Button -->
+                        <button class="inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 transition-colors">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                        </button>
+
+                        <!-- Cart Button -->
+                        <button class="inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 transition-colors relative">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <span class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-purple-600 text-white text-xs flex items-center justify-center font-medium">
+                                {{ cartCount }}
+                            </span>
                         </button>
                     </div>
                 </div>
-            </div>
-        </nav>
+
+                <!-- Mobile Menu -->
+                <div v-if="isMobileMenuOpen" class="md:hidden py-4 border-t">
+                    <nav class="flex flex-col gap-3">
+                        <a href="/" class="text-sm font-medium hover:text-purple-600 transition-colors py-2">
+                            Home
+                        </a>
+                        <a href="/#products" class="text-sm font-medium hover:text-purple-600 transition-colors py-2">
+                            Products
+                        </a>
+                    </nav>
+                    </div>
+                </div>
+        </header>
 
         <!-- Hero Section -->
         <div class="pt-20 sm:pt-24 pb-12 sm:pb-16">
@@ -802,18 +934,19 @@ const reviews = [
                     <!-- Left: Images -->
                     <div class="space-y-4 sm:space-y-6 order-1 lg:order-none">
                         <!-- Main Image -->
-                        <div class="aspect-square sm:aspect-[4/3] lg:aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-[#f5f5f7] dark:bg-[#1d1d1f] shadow-xl sm:shadow-2xl">
+                        <div class="aspect-square sm:aspect-[4/3] lg:aspect-square">
                             <img
-                                :src="product.images[selectedImage]"
-                                :alt="product.name"
+                                v-if="productImages.length > 0"
+                                :src="productImages[selectedImage]"
+                                :alt="productData.name"
                                 class="w-full h-full object-contain transition-opacity duration-300"
                             />
                         </div>
 
                         <!-- Thumbnail Images -->
-                        <div class="grid grid-cols-8 gap-0.5 sm:gap-1 lg:gap-1.5">
+                        <div v-if="productImages.length > 0" class="grid grid-cols-8 gap-0.5 sm:gap-1 lg:gap-1.5">
                             <button
-                                v-for="(image, index) in product.images"
+                                v-for="(image, index) in productImages"
                                 :key="index"
                                 @click="selectedImage = index"
                                 :class="[
@@ -825,7 +958,7 @@ const reviews = [
                             >
                                 <img
                                     :src="image"
-                                    :alt="`${product.name} view ${index + 1}`"
+                                    :alt="`${productData.name} view ${index + 1}`"
                                     class="w-full h-full object-contain"
                                 />
                             </button>
@@ -840,14 +973,14 @@ const reviews = [
                                 <svg class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
                                 </svg>
-                                <span class="font-semibold">Limited Time Offer - {{ product.discount }}% Off - Limited Stock Available</span>
+                                <span class="font-semibold">Limited Time Offer - {{ productData.discount }}% Off - Limited Stock Available</span>
                             </div>
                         </div>
 
                         <!-- Product Title -->
                         <div class="mb-4 sm:mb-6">
                             <h2 class="text-xl sm:text-2xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] leading-relaxed">
-                                Apple iPhone 17 Pro Max 512 GB: 6.9-inch Display with ProMotion, A19 Pro Chip, Best Battery Life in Any iPhone Ever, Pro Fusion Camera System, Center Stage Front Camera; Cosmic Orange
+                                {{ productData.name }}
                             </h2>
                         </div>
 
@@ -865,7 +998,7 @@ const reviews = [
                         </div>
                                 </div>
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-[#ff3b30] text-white self-start">
-                                    Save {{ product.discount }}%
+                                    Save {{ productData.discount }}%
                                 </span>
                             </div>
                             <p class="text-sm text-[#86868b] dark:text-[#6e6e73] mb-3">
@@ -894,22 +1027,22 @@ const reviews = [
                         </div>
 
                         <!-- Color Options -->
-                        <div class="mb-6 sm:mb-8">
+                        <div v-if="productData.colors && productData.colors.length > 0" class="mb-6 sm:mb-8">
                             <h3 class="text-sm sm:text-base font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-3">
                                 Available Colors
                             </h3>
                             <div class="flex items-center space-x-3">
-                                <div class="flex flex-col items-center space-y-1" @click="selectColor('Orange')">
-                                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-[#d2d2d7] dark:border-[#424245] cursor-pointer hover:scale-110 transition-transform" style="background-color: #fa8b4b;"></div>
-                                    <span class="text-xs text-[#86868b] dark:text-[#6e6e73]">Orange</span>
-                                </div>
-                                <div class="flex flex-col items-center space-y-1" @click="selectColor('Gray')">
-                                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-[#d2d2d7] dark:border-[#424245] cursor-pointer hover:scale-110 transition-transform" style="background-color: #4a4d5e;"></div>
-                                    <span class="text-xs text-[#86868b] dark:text-[#6e6e73]">Gray</span>
-                                </div>
-                                <div class="flex flex-col items-center space-y-1" @click="selectColor('White')">
-                                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-[#d2d2d7] dark:border-[#424245] cursor-pointer hover:scale-110 transition-transform" style="background-color: #f5f5f5;"></div>
-                                    <span class="text-xs text-[#86868b] dark:text-[#6e6e73]">White</span>
+                                <div
+                                    v-for="(color, index) in productData.colors"
+                                    :key="index"
+                                    class="flex flex-col items-center space-y-1"
+                                    @click="selectColor(color)"
+                                >
+                                    <div
+                                        class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-[#d2d2d7] dark:border-[#424245] cursor-pointer hover:scale-110 transition-transform"
+                                        :style="`background-color: ${getColorCode(color)};`"
+                                    ></div>
+                                    <span class="text-xs text-[#86868b] dark:text-[#6e6e73]">{{ color }}</span>
                                 </div>
                             </div>
                         </div>
@@ -971,8 +1104,8 @@ const reviews = [
                                 <div>
                                     <p class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] text-sm sm:text-base">30-Day Returns</p>
                                     <p class="text-xs sm:text-sm text-[#86868b] dark:text-[#6e6e73]">Free returns, no questions asked</p>
-                                    </div>
                                 </div>
+                            </div>
                                 <div class="flex items-start space-x-3">
                                     <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#06c] dark:text-[#2997ff] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -980,39 +1113,11 @@ const reviews = [
                                     <div>
                                         <p class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] text-sm sm:text-base">Secure Payment</p>
                                         <p class="text-xs sm:text-sm text-[#86868b] dark:text-[#6e6e73]">SSL encrypted checkout with PayPal</p>
-                                    </div>
-                                </div>
-                            </div>
+                        </div>
+                        </div>
+                        </div>
                         </div>
 
-                        <!-- Description -->
-                        <div class="mt-6 sm:mt-8">
-                            <h3 class="text-xl sm:text-2xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-3 sm:mb-4">
-                                Overview
-                            </h3>
-                            <p class="text-[#1d1d1f] dark:text-[#a1a1a6] leading-relaxed mb-4 sm:mb-6 text-sm sm:text-base">
-                                {{ product.description }}
-                            </p>
-                        </div>
-
-                        <!-- Key Features -->
-                        <div class="mt-6 sm:mt-8">
-                            <h3 class="text-xl sm:text-2xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-3 sm:mb-4">
-                                Key Features
-                            </h3>
-                            <ul class="space-y-2 sm:space-y-3">
-                                <li
-                                    v-for="(feature, index) in product.features"
-                                    :key="index"
-                                    class="flex items-start space-x-3"
-                                >
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-[#06c] dark:text-[#2997ff] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span class="text-[#1d1d1f] dark:text-[#a1a1a6] text-sm sm:text-base">{{ feature }}</span>
-                                </li>
-                            </ul>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1021,24 +1126,75 @@ const reviews = [
         <!-- Additional Content Section -->
         <div class="py-12 sm:py-16">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <!-- Technical Specifications -->
+                <!-- Overview -->
                 <div class="mt-0">
-                    <h2 class="text-3xl sm:text-4xl font-semibold text-center text-[#1d1d1f] dark:text-[#f5f5f7] mb-8 sm:mb-12">
+                    <div class="text-center mb-8 sm:mb-12">
+                        <div class="inline-flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 bg-gradient-to-r from-[#0071e3] to-[#0a84ff] rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/>
+                                </svg>
+                            </div>
+                            <h2 class="text-3xl sm:text-4xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7]">
+                                Overview
+                            </h2>
+                        </div>
+                        <p class="text-lg text-[#6e6e73] dark:text-[#a1a1a6] max-w-2xl mx-auto">
+                            Discover the cutting-edge technology and premium features that make this device exceptional
+                        </p>
+                    </div>
+
+                    <div class="max-w-4xl mx-auto">
+                        <p class="text-[#6e6e73] dark:text-[#a1a1a6] leading-relaxed text-lg text-center">
+                            Experience the future of mobile technology with the iPhone 17 Pro Max. Featuring the revolutionary A18 Pro chip, advanced camera system with 5x optical zoom, and titanium design crafted for ultimate durability and premium feel.
+                        </p>
+                    </div>
+                </div>
+
+
+                <!-- Technical Specifications -->
+                <div class="mt-16 sm:mt-24">
+                    <div class="text-center mb-8 sm:mb-12">
+                        <div class="inline-flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 bg-gradient-to-r from-[#0071e3] to-[#0a84ff] rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <h2 class="text-3xl sm:text-4xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7]">
                         Technical Specifications
                     </h2>
-                    <div class="max-w-4xl mx-auto bg-white dark:bg-[#1d1d1f] rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden">
-                        <div class="divide-y divide-[#d2d2d7] dark:divide-[#424245]">
+                        </div>
+                        <p class="text-lg text-[#6e6e73] dark:text-[#a1a1a6] max-w-2xl mx-auto">
+                            Discover the cutting-edge technology and premium features that make this device exceptional
+                        </p>
+                    </div>
+
+                    <div class="max-w-6xl mx-auto">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             <div
-                                v-for="(spec, index) in product.specs"
+                                v-for="(spec, index) in specs"
                                 :key="index"
-                                class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 px-4 sm:px-8 py-4 sm:py-6 hover:bg-[#f5f5f7] dark:hover:bg-[#2d2d2d] transition-colors"
+                                class="group bg-gradient-to-br from-white to-gray-50 dark:from-[#1d1d1f] dark:to-[#2d2d2d] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 hover:border-[#0071e3] dark:hover:border-[#0a84ff] transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
                             >
-                                <div class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] text-sm sm:text-base">
-                                    {{ spec.label }}
+                                <div class="flex items-start gap-4">
+                                    <div class="w-12 h-12 bg-gradient-to-r from-[#0071e3] to-[#0a84ff] rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
                                 </div>
-                                <div class="text-[#6e6e73] dark:text-[#a1a1a6] text-sm sm:text-base">
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-bold text-[#1d1d1f] dark:text-[#f5f5f7] text-lg mb-2 group-hover:text-[#0071e3] dark:group-hover:text-[#0a84ff] transition-colors">
+                                            {{ spec.label }}
+                                        </h3>
+                                        <p class="text-[#6e6e73] dark:text-[#a1a1a6] text-base leading-relaxed">
                                     {{ spec.value }}
+                                        </p>
                                 </div>
+                                </div>
+
+                                <!-- Hover Effect -->
+                                <div class="mt-4 h-1 bg-gradient-to-r from-[#0071e3] to-[#0a84ff] rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                             </div>
                         </div>
                     </div>
@@ -1047,55 +1203,86 @@ const reviews = [
                 <!-- Customer Reviews -->
                 <div class="mt-16 sm:mt-24">
                     <div class="text-center mb-8 sm:mb-12">
-                        <h2 class="text-3xl sm:text-4xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-3 sm:mb-4">
-                            Customer Reviews
-                        </h2>
-                        <div class="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-2">
-                            <div class="flex space-x-1">
-                                <svg v-for="i in 5" :key="i" class="w-5 h-5 sm:w-6 sm:h-6 text-[#ffcc00]" fill="currentColor" viewBox="0 0 20 20">
+                        <div class="inline-flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 bg-gradient-to-r from-[#ffcc00] to-[#ff9500] rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                 </svg>
                             </div>
-                            <span class="text-lg sm:text-xl text-[#1d1d1f] dark:text-[#f5f5f7] font-semibold">4.9 out of 5</span>
-                            <span class="text-[#86868b] dark:text-[#6e6e73] text-sm sm:text-base">Based on {{ reviews.length }} reviews</span>
+                            <h2 class="text-3xl sm:text-4xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7]">
+                            Customer Reviews
+                        </h2>
+                        </div>
+                        <p class="text-lg text-[#6e6e73] dark:text-[#a1a1a6] max-w-2xl mx-auto mb-6">
+                            Real experiences from our verified customers
+                        </p>
+
+                        <!-- Rating Summary -->
+                        <div class="max-w-md mx-auto bg-gradient-to-br from-white to-gray-50 dark:from-[#1d1d1f] dark:to-[#2d2d2d] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-lg">
+                            <div class="flex flex-col items-center">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <svg v-for="i in 5" :key="i" class="w-7 h-7 text-[#ffcc00]" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                            </div>
+                                <div class="text-4xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7] mb-1">4.9</div>
+                                <div class="text-sm text-[#6e6e73] dark:text-[#a1a1a6]">out of 5 stars</div>
+                                <div class="text-xs text-[#86868b] dark:text-[#6e6e73] mt-2">
+                                    Based on <span class="font-semibold text-[#0071e3]">{{ reviews.length }} verified reviews</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="max-w-5xl mx-auto space-y-4 sm:space-y-6">
+                    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div
                             v-for="(review, index) in reviews"
                             :key="index"
-                            class="bg-white dark:bg-[#1d1d1f] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg hover:shadow-xl transition-shadow"
+                            class="group bg-gradient-to-br from-white to-gray-50 dark:from-[#1d1d1f] dark:to-[#2d2d2d] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 hover:border-[#0071e3] dark:hover:border-[#0a84ff] transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
                         >
-                            <div class="flex items-start justify-between mb-3 sm:mb-4">
-                                <div class="flex-1">
-                                    <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-3 mb-2">
-                                        <h4 class="font-semibold text-base sm:text-lg text-[#1d1d1f] dark:text-[#f5f5f7]">
+                            <!-- Review Header -->
+                            <div class="flex items-start gap-4 mb-4">
+                                <!-- Avatar -->
+                                <div class="w-12 h-12 bg-gradient-to-r from-[#0071e3] to-[#0a84ff] rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                    <span class="text-white font-bold text-lg">{{ review.name.charAt(0) }}</span>
+                                </div>
+
+                                <!-- Name and Date -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <h4 class="font-bold text-[#1d1d1f] dark:text-[#f5f5f7] text-lg group-hover:text-[#0071e3] dark:group-hover:text-[#0a84ff] transition-colors">
                                             {{ review.name }}
                                         </h4>
-                                        <span v-if="review.verified" class="inline-flex items-center space-x-1 text-xs text-[#06c] dark:text-[#2997ff] self-start">
-                                            <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <span v-if="review.verified" class="inline-flex items-center gap-1 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-xs font-medium px-2 py-1 rounded-full">
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                             </svg>
-                                            <span>Verified Purchase</span>
+                                            Verified
                                         </span>
                                     </div>
-                                    <div class="flex items-center space-x-2">
-                                        <div class="flex space-x-0.5">
-                                            <svg v-for="i in review.rating" :key="i" class="w-3 h-3 sm:w-4 sm:h-4 text-[#ffcc00]" fill="currentColor" viewBox="0 0 20 20">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex gap-0.5">
+                                            <svg v-for="i in review.rating" :key="i" class="w-4 h-4 text-[#ffcc00]" fill="currentColor" viewBox="0 0 20 20">
                                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                             </svg>
                                         </div>
-                                        <span class="text-xs sm:text-sm text-[#86868b] dark:text-[#6e6e73]">{{ review.date }}</span>
+                                        <span class="text-xs text-[#86868b] dark:text-[#6e6e73]">{{ review.date }}</span>
                                     </div>
                                 </div>
                             </div>
-                            <h5 class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-2 text-sm sm:text-base">
+
+                            <!-- Review Title -->
+                            <h5 class="font-bold text-[#1d1d1f] dark:text-[#f5f5f7] mb-3 text-lg leading-tight">
                                 {{ review.title }}
                             </h5>
-                            <p class="text-[#6e6e73] dark:text-[#a1a1a6] leading-relaxed text-sm sm:text-base">
+
+                            <!-- Review Comment -->
+                            <p class="text-[#6e6e73] dark:text-[#a1a1a6] leading-relaxed text-base">
                                 {{ review.comment }}
                             </p>
+
+                            <!-- Hover Effect -->
+                            <div class="mt-4 h-1 bg-gradient-to-r from-[#ffcc00] to-[#ff9500] rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                         </div>
                     </div>
                 </div>
@@ -1114,83 +1301,6 @@ const reviews = [
                 </div>
             </div>
         </div>
-
-        <!-- Footer -->
-        <footer class="bg-[#f5f5f7] dark:bg-[#1d1d1f] mt-16 sm:mt-24 border-t border-[#d2d2d7] dark:border-[#424245]">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <!-- Main Footer Content -->
-                <div class="py-12 sm:py-16">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12">
-                        <!-- Company Info -->
-                        <div class="lg:col-span-1">
-                            <div class="flex items-center space-x-3 mb-4">
-                                <div class="w-10 h-10 bg-gradient-to-r from-[#0071e3] to-[#0077ed] rounded-lg flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="text-xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7]">Zan Store LTD</h3>
-                                    <p class="text-sm text-[#86868b] dark:text-[#6e6e73]">Premium Electronics & Technology</p>
-                                </div>
-                            </div>
-                            <p class="text-sm text-[#86868b] dark:text-[#6e6e73] mb-6 max-w-md">
-                                Your trusted partner for premium electronics and cutting-edge technology. We deliver excellence in every product.
-                            </p>
-                            <div class="space-y-2">
-                                <div class="flex items-center space-x-3 text-sm text-[#86868b] dark:text-[#6e6e73]">
-                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    </svg>
-                                    <span>123 Technology Avenue, Silicon Valley, CA 94043</span>
-                                </div>
-                                <div class="flex items-center space-x-3 text-sm text-[#86868b] dark:text-[#6e6e73]">
-                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                                    </svg>
-                                    <span>+1 (555) 123-4567</span>
-                                </div>
-                                <div class="flex items-center space-x-3 text-sm text-[#86868b] dark:text-[#6e6e73]">
-                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                    </svg>
-                                    <span>support@zanstore.com</span>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <!-- Customer Service -->
-                        <div>
-                            <h4 class="text-sm font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-4">Customer Service</h4>
-                            <ul class="space-y-3">
-                                <li><a href="/shipping-info" class="text-sm text-[#86868b] dark:text-[#6e6e73] hover:text-[#0071e3] dark:hover:text-[#2997ff] transition-colors">Shipping Info</a></li>
-                                <li><a href="/returns" class="text-sm text-[#86868b] dark:text-[#6e6e73] hover:text-[#0071e3] dark:hover:text-[#2997ff] transition-colors">Returns</a></li>
-                                <li><a href="/warranty" class="text-sm text-[#86868b] dark:text-[#6e6e73] hover:text-[#0071e3] dark:hover:text-[#2997ff] transition-colors">Warranty</a></li>
-                                <li><a href="/faq" class="text-sm text-[#86868b] dark:text-[#6e6e73] hover:text-[#0071e3] dark:hover:text-[#2997ff] transition-colors">FAQ</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bottom Footer -->
-                <div class="py-6 border-t border-[#d2d2d7] dark:border-[#424245]">
-                    <div class="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
-                        <div class="text-center sm:text-left">
-                <p class="text-xs sm:text-sm text-[#6e6e73] dark:text-[#a1a1a6]">
-                                © 2025 Zan Store LTD. All rights reserved.
-                            </p>
-                        </div>
-                        <div class="flex items-center space-x-6">
-                            <a href="/privacy-policy" class="text-xs sm:text-sm text-[#6e6e73] dark:text-[#a1a1a6] hover:text-[#0071e3] dark:hover:text-[#2997ff] transition-colors">Privacy Policy</a>
-                            <a href="#" class="text-xs sm:text-sm text-[#6e6e73] dark:text-[#a1a1a6] hover:text-[#0071e3] dark:hover:text-[#2997ff] transition-colors">Terms of Service</a>
-                            <a href="#" class="text-xs sm:text-sm text-[#6e6e73] dark:text-[#a1a1a6] hover:text-[#0071e3] dark:hover:text-[#2997ff] transition-colors">Cookies</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </footer>
 
         <!-- Chat Bot Icon -->
         <div class="fixed bottom-6 right-6 z-50">
@@ -1434,6 +1544,80 @@ const reviews = [
                 </div>
             </div>
         </div>
+
+        <!-- Footer -->
+        <footer class="bg-gray-900 text-gray-300 mt-16">
+            <div class="container mx-auto px-4 py-12">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+                    <!-- About -->
+                    <div>
+                        <div class="mb-4">
+                            <span class="text-xl text-white font-semibold block mb-3">Zan Store</span>
+                            <img src="/images/apple-white.png" alt="Partner" class="h-16" />
+                        </div>
+                        <div class="flex gap-4">
+                            <a href="#" class="hover:text-white transition-colors">
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                </svg>
+                            </a>
+                            <a href="#" class="hover:text-white transition-colors">
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                                </svg>
+                            </a>
+                            <a href="#" class="hover:text-white transition-colors">
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/>
+                                </svg>
+                            </a>
+                            <a href="#" class="hover:text-white transition-colors">
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Quick Links -->
+                    <div>
+                        <h3 class="text-white font-semibold mb-4">Quick Links</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#" class="hover:text-white transition-colors">About Us</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Customer Service -->
+                    <div>
+                        <h3 class="text-white font-semibold mb-4">Customer Service</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#" class="hover:text-white transition-colors">Help Center</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">Track Order</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">Returns</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">Shipping Info</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Contact -->
+                    <div>
+                        <h3 class="text-white font-semibold mb-4">Contact Us</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li>Email: info@zan-store.com</li>
+                            <li>Phone: +1 (555) 123-4567</li>
+                            <li>Address: 123 Store Street</li>
+                            <li>City, State 12345</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-800 pt-8 text-center text-sm">
+                    <p>&copy; 2025 Zan Store. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
     </div>
 </template>
 

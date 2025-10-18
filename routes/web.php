@@ -1,19 +1,19 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Product');
-})->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
-Route::get('/product/{id}', function ($id) {
-    return Inertia::render('Product', [
-        'productId' => $id
-    ]);
-})->name('product');
+Route::get('/product2', function () {
+    return Inertia::render('Product');
+})->name('product2');
+
+Route::get('/product/{id}', [ProductController::class, 'show'])->name('product');
 
 Route::get('shipping-info', function () {
     return Inertia::render('ShippingInfo');
@@ -38,6 +38,31 @@ Route::get('privacy-policy', function () {
 Route::get('dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+// Admin Products Routes
+Route::get('dashboard/products', [\App\Http\Controllers\Admin\ProductController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.products');
+
+Route::get('dashboard/products/create', [\App\Http\Controllers\Admin\ProductController::class, 'create'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.products.create');
+
+Route::post('dashboard/products', [\App\Http\Controllers\Admin\ProductController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.products.store');
+
+Route::get('dashboard/products/{product}/edit', [\App\Http\Controllers\Admin\ProductController::class, 'edit'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.products.edit');
+
+Route::put('dashboard/products/{product}', [\App\Http\Controllers\Admin\ProductController::class, 'update'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.products.update');
+
+Route::delete('dashboard/products/{product}', [\App\Http\Controllers\Admin\ProductController::class, 'destroy'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.products.destroy');
 
 Route::get('orders', [OrderController::class, 'index'])
     ->middleware(['auth', 'verified'])

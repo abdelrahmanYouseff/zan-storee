@@ -542,6 +542,40 @@ const features = [
     .text-6xl {
         color: #000000 !important;
     }
+
+    /* Force black color for Featured Products section on mobile */
+    .text-3xl {
+        color: #000000 !important;
+    }
+
+    /* Force black color for View All button text on mobile */
+    .font-medium {
+        color: #000000 !important;
+    }
+
+    /* Force black color for features section text on mobile */
+    .text-gray-900 {
+        color: #000000 !important;
+    }
+
+    .text-gray-600 {
+        color: #000000 !important;
+    }
+
+    /* Force white color for footer Zan Store text on mobile */
+    .text-white {
+        color: #ffffff !important;
+    }
+
+    /* Force red color for crossed out price (original price) */
+    .line-through {
+        color: #ef4444 !important;
+    }
+    
+    /* Force black color for hamburger menu button on mobile */
+    .h-5.w-5 {
+        color: #000000 !important;
+    }
 }
 </style>
 

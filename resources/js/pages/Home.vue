@@ -571,9 +571,23 @@ const features = [
     .line-through {
         color: #ef4444 !important;
     }
-    
+
     /* Force black color for hamburger menu button on mobile */
     .h-5.w-5 {
+        color: #000000 !important;
+    }
+    
+    /* Force white color for social media icons in footer on mobile */
+    .h-5.w-5 svg {
+        color: #ffffff !important;
+    }
+    
+    /* Force black color for features text on mobile */
+    .text-center h3 {
+        color: #000000 !important;
+    }
+    
+    .text-center p {
         color: #000000 !important;
     }
 }

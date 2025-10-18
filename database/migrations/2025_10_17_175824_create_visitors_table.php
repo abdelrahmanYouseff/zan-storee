@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('device_type')->nullable(); // mobile, desktop, tablet
             $table->string('browser')->nullable();
             $table->timestamps();
-            
+
             $table->index(['ip_address', 'created_at']);
         });
     }

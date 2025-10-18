@@ -18,9 +18,9 @@ class TrackVisitor
     public function handle(Request $request, Closure $next): Response
     {
         // Skip tracking for admin routes and API calls
-        if ($request->is('dashboard*') || 
-            $request->is('orders*') || 
-            $request->is('chat*') || 
+        if ($request->is('dashboard*') ||
+            $request->is('orders*') ||
+            $request->is('chat*') ||
             $request->is('api/*') ||
             $request->is('login*') ||
             $request->is('register*')) {
@@ -29,7 +29,7 @@ class TrackVisitor
 
         try {
             $agent = new Agent();
-            
+
             // Detect device type
             $deviceType = 'desktop';
             if ($agent->isMobile()) {

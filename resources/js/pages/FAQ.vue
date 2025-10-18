@@ -771,17 +771,17 @@ const searchResults = computed(() => {
         font-size: 2rem !important;
         line-height: 2.25rem !important;
     }
-    
+
     .text-5xl {
         font-size: 2.5rem !important;
         line-height: 2.75rem !important;
     }
-    
+
     .text-3xl {
         font-size: 1.5rem !important;
         line-height: 2rem !important;
     }
-    
+
     .text-2xl {
         font-size: 1.25rem !important;
         line-height: 1.75rem !important;

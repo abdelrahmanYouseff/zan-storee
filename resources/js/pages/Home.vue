@@ -513,20 +513,34 @@ const features = [
         font-size: 2rem !important;
         line-height: 2.25rem !important;
     }
-    
+
     .text-6xl {
         font-size: 2.5rem !important;
         line-height: 2.75rem !important;
     }
-    
+
     .text-3xl {
         font-size: 1.5rem !important;
         line-height: 2rem !important;
     }
-    
+
     .text-2xl {
         font-size: 1.25rem !important;
         line-height: 1.75rem !important;
+    }
+
+    /* Force black color for logo and menu button on mobile */
+    .text-xl {
+        color: #000000 !important;
+    }
+
+    /* Force black color for main title on mobile */
+    .text-4xl {
+        color: #000000 !important;
+    }
+
+    .text-6xl {
+        color: #000000 !important;
     }
 }
 </style>

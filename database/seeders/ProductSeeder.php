@@ -39,30 +39,6 @@ class ProductSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        // يمكن إضافة منتجات أخرى هنا
-        Product::create([
-            'main_image' => '/images/blue_1.png',
-            'secondary_images' => [
-                '/images/blue_2.png',
-                '/images/orange_1.png',
-            ],
-            'name' => 'Apple iPhone 17 Pro 256 GB',
-            'description' => 'The perfect balance of performance and size. iPhone 17 Pro features the powerful A18 Pro chip and advanced camera system in a compact design.',
-            'features' => [
-                'A18 Pro chip with 6-core CPU',
-                '6.3-inch Super Retina XDR display',
-                'Pro camera system with 3x optical zoom',
-                'Titanium design',
-                'Up to 30 hours battery life',
-                'USB-C charging',
-                'Face ID',
-                '5G connectivity'
-            ],
-            'colors' => ['Space Gray', 'Silver', 'Gold'],
-            'quantity' => 30,
-            'price_before' => 899.00,
-            'price_after' => 449.00,
-            'is_active' => true,
-        ]);
+
     }
 }

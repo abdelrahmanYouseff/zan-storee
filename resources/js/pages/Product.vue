@@ -637,63 +637,10 @@ const loadPayPalButtons = () => {
     }
 };
 
-// Timer functionality
-const timeLeft = ref({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0
-});
-
-const timerIsActive = ref(true);
-let timerEndTime = ref<Date | null>(null);
-
-let timerInterval: NodeJS.Timeout | null = null;
-
-const updateTimer = () => {
-    if (!timerIsActive.value || !timerEndTime.value) {
-        timeLeft.value = { days: 0, hours: 0, minutes: 0, seconds: 0 };
-        return;
-    }
-
-    const now = new Date().getTime();
-    const endTime = new Date(timerEndTime.value).getTime();
-    const distance = endTime - now;
-
-    if (distance > 0) {
-        timeLeft.value.days = Math.floor(distance / (1000 * 60 * 60 * 24));
-        timeLeft.value.hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        timeLeft.value.minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        timeLeft.value.seconds = Math.floor((distance % (1000 * 60)) / 1000);
-    } else {
-        timeLeft.value = { days: 0, hours: 0, minutes: 0, seconds: 0 };
-    }
-};
-
-// Fetch timer status from server
-const fetchTimerStatus = async () => {
-    try {
-        const response = await fetch('/api/timer/status');
-        const data = await response.json();
-
-        if (data.success) {
-            timerIsActive.value = data.timer.is_active;
-            timerEndTime.value = new Date(data.timer.end_time);
-            updateTimer();
-        }
-    } catch (error) {
-        console.error('Error fetching timer status:', error);
-    }
-};
 
 onMounted(() => {
     // Force light mode - remove dark class
     document.documentElement.classList.remove('dark');
-
-    // Fetch timer status from database
-    fetchTimerStatus();
-
-    timerInterval = setInterval(updateTimer, 1000);
 
     // Detect user's currency with delay to ensure DOM is ready
     setTimeout(() => {
@@ -734,9 +681,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    if (timerInterval) {
-        clearInterval(timerInterval);
-    }
     // Stop polling for admin responses
     stopAdminPolling();
 });
@@ -984,26 +928,6 @@ const reviews = computed(() => {
                             <p class="text-sm text-[#86868b] dark:text-[#6e6e73] mb-3">
                                 Limited quantity available at this price
                             </p>
-
-                            <!-- Countdown Timer (Small) -->
-                            <div class="flex items-center space-x-1 text-sm font-mono font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">
-                                <span class="text-xs text-[#86868b] dark:text-[#6e6e73] mr-1">Offer ends in:</span>
-                                <span class="bg-[#f5f5f7] dark:bg-[#1d1d1f] px-1.5 py-0.5 rounded border border-[#d2d2d7] dark:border-[#424245]">
-                                    {{ timeLeft.days.toString().padStart(2, '0') }}
-                                </span>
-                                <span class="text-[#86868b] dark:text-[#6e6e73]">:</span>
-                                <span class="bg-[#f5f5f7] dark:bg-[#1d1d1f] px-1.5 py-0.5 rounded border border-[#d2d2d7] dark:border-[#424245]">
-                                    {{ timeLeft.hours.toString().padStart(2, '0') }}
-                                </span>
-                                <span class="text-[#86868b] dark:text-[#6e6e73]">:</span>
-                                <span class="bg-[#f5f5f7] dark:bg-[#1d1d1f] px-1.5 py-0.5 rounded border border-[#d2d2d7] dark:border-[#424245]">
-                                    {{ timeLeft.minutes.toString().padStart(2, '0') }}
-                                </span>
-                                <span class="text-[#86868b] dark:text-[#6e6e73]">:</span>
-                                <span class="bg-[#f5f5f7] dark:bg-[#1d1d1f] px-1.5 py-0.5 rounded border border-[#d2d2d7] dark:border-[#424245] animate-pulse">
-                                    {{ timeLeft.seconds.toString().padStart(2, '0') }}
-                                </span>
-                            </div>
                         </div>
 
                         <!-- Color Options -->

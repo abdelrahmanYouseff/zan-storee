@@ -45,7 +45,7 @@ class TimerControl extends Command
                 break;
 
             case 'restart':
-                $hoursToAdd = $hours ?? 48;
+                $hoursToAdd = (int)($hours ?? 48);
                 $timer->update([
                     'is_active' => true,
                     'end_time' => now()->addHours($hoursToAdd),
@@ -59,10 +59,11 @@ class TimerControl extends Command
                     $this->error('❌ Please provide hours. Example: php artisan timer:control set 24');
                     return;
                 }
+                $hoursToSet = (int)$hours;
                 $timer->update([
-                    'end_time' => now()->addHours($hours),
+                    'end_time' => now()->addHours($hoursToSet),
                 ]);
-                $this->info("⏱️  Timer set to {$hours} hours from now!");
+                $this->info("⏱️  Timer set to {$hoursToSet} hours from now!");
                 $this->displayStatus($timer);
                 break;
 
@@ -95,11 +96,11 @@ class TimerControl extends Command
         $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->line('Status:    ' . ($timer->is_active ? '🟢 Active' : '🔴 Stopped'));
         $this->line('End Time:  ' . $timer->end_time->format('Y-m-d H:i:s'));
-        
+
         if ($timer->is_active) {
             $now = now();
             $diff = $timer->end_time->diff($now);
-            
+
             if ($timer->end_time->isPast()) {
                 $this->line('Time Left: ⏰ Timer has expired!');
             } else {

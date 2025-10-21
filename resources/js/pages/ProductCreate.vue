@@ -144,16 +144,16 @@ const submit = () => {
                         <CardContent class="space-y-4">
                             <div class="space-y-2">
                                 <Label for="main_image">Main Image *</Label>
-                                <input 
-                                    id="main_image" 
-                                    type="file" 
+                                <input
+                                    id="main_image"
+                                    type="file"
                                     accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
                                     @change="handleMainImageUpload"
                                     required
                                     class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                                 <span v-if="form.errors.main_image" class="text-sm text-red-600">{{ form.errors.main_image }}</span>
-                                
+
                                 <!-- Main Image Preview -->
                                 <div v-if="mainImagePreview" class="mt-2">
                                     <img :src="mainImagePreview" alt="Main preview" class="w-32 h-32 object-cover rounded-md border" />
@@ -162,23 +162,23 @@ const submit = () => {
 
                             <div class="space-y-2">
                                 <Label for="secondary_images">Secondary Images (Multiple)</Label>
-                                <input 
-                                    id="secondary_images" 
-                                    type="file" 
+                                <input
+                                    id="secondary_images"
+                                    type="file"
                                     accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
                                     @change="handleSecondaryImagesUpload"
                                     multiple
                                     class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 />
-                                
+
                                 <!-- Secondary Images Previews -->
                                 <div v-if="secondaryImagesPreviews.length" class="mt-2 grid grid-cols-4 gap-2">
                                     <div v-for="(preview, index) in secondaryImagesPreviews" :key="index" class="relative">
                                         <img :src="preview" alt="Secondary preview" class="w-full h-24 object-cover rounded-md border" />
-                                        <Button 
-                                            type="button" 
-                                            variant="destructive" 
-                                            size="sm" 
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="sm"
                                             class="absolute top-1 right-1 h-6 w-6 p-0"
                                             @click="removeSecondaryImage(index)"
                                         >

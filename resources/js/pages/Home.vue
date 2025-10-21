@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, nextTick } from 'vue';
 
 interface Product {
     id: number;
@@ -24,6 +24,17 @@ const props = defineProps<Props>();
 const cartCount = ref(3);
 const isMobileMenuOpen = ref(false);
 const isChatOpen = ref(false);
+const messageInput = ref('');
+const chatMessages = ref([
+    {
+        id: 1,
+        type: 'bot',
+        message: 'Hi! 👋 Welcome to Zan Store. How can I help you today?',
+        timestamp: 'Just now'
+    }
+]);
+const isTyping = ref(false);
+const chatSessionId = ref<string | null>(null);
 
 const toggleMobileMenu = () => {
     isMobileMenuOpen.value = !isMobileMenuOpen.value;
@@ -31,6 +42,87 @@ const toggleMobileMenu = () => {
 
 const toggleChat = () => {
     isChatOpen.value = !isChatOpen.value;
+    if (isChatOpen.value) {
+        nextTick(() => {
+            scrollToBottom();
+        });
+    }
+};
+
+// Auto scroll to bottom of chat
+const scrollToBottom = () => {
+    const chatContainer = document.querySelector('.chat-messages');
+    if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+};
+
+// Add message to chat
+const addMessage = (type: 'bot' | 'user', message: string) => {
+    const newMessage = {
+        id: chatMessages.value.length + 1,
+        type,
+        message,
+        timestamp: new Date().toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        })
+    };
+    chatMessages.value.push(newMessage);
+
+    nextTick(() => {
+        scrollToBottom();
+    });
+};
+
+// Send message to server
+const sendMessage = async () => {
+    if (!messageInput.value.trim()) return;
+
+    const userMessage = messageInput.value.trim();
+    addMessage('user', userMessage);
+    messageInput.value = '';
+
+    isTyping.value = true;
+
+    try {
+        const response = await fetch('/api/chat/customer/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            },
+            body: JSON.stringify({
+                message: userMessage,
+                session_id: chatSessionId.value
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            chatSessionId.value = data.session_id;
+
+            // Add confirmation message
+            setTimeout(() => {
+                isTyping.value = false;
+                addMessage('bot', 'Thank you for your message! Our team will respond shortly. 💬');
+            }, 1000);
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        isTyping.value = false;
+        addMessage('bot', 'Sorry, there was an error sending your message. Please try again.');
+    }
+};
+
+// Handle enter key
+const handleKeyPress = (event: KeyboardEvent) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+    }
 };
 
 const features = [
@@ -361,31 +453,35 @@ const features = [
             </div>
 
             <!-- Chat Body -->
-            <div class="h-[500px] overflow-y-auto p-4 bg-gray-50">
+            <div class="h-[500px] overflow-y-auto p-4 bg-gray-50 chat-messages">
                 <div class="space-y-4">
-                    <!-- Welcome Message -->
-                    <div class="flex items-start gap-3">
+                    <!-- Chat Messages -->
+                    <div v-for="msg in chatMessages" :key="msg.id" :class="msg.type === 'bot' ? 'flex items-start gap-3' : 'flex items-start gap-3 justify-end'">
+                        <div v-if="msg.type === 'bot'" class="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                            </svg>
+                        </div>
+                        <div :class="msg.type === 'bot' ? 'bg-white rounded-2xl rounded-tl-none p-4 shadow-sm max-w-[80%]' : 'bg-gradient-to-br from-purple-600 to-blue-500 text-white rounded-2xl rounded-tr-none p-4 shadow-sm max-w-[80%]'">
+                            <p class="text-base" :class="msg.type === 'bot' ? 'text-gray-800' : 'text-white'">{{ msg.message }}</p>
+                            <span class="text-xs mt-1 block" :class="msg.type === 'bot' ? 'text-gray-500' : 'text-white/80'">{{ msg.timestamp }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Typing Indicator -->
+                    <div v-if="isTyping" class="flex items-start gap-3">
                         <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
                             </svg>
                         </div>
-                        <div class="bg-white rounded-2xl rounded-tl-none p-4 shadow-sm max-w-[80%]">
-                            <p class="text-base text-gray-800">Hi! 👋 Welcome to Zan Store. How can I help you today?</p>
+                        <div class="bg-white rounded-2xl rounded-tl-none p-4 shadow-sm">
+                            <div class="flex gap-1">
+                                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <div class="flex flex-col gap-3">
-                        <button class="bg-white hover:bg-purple-50 text-left p-4 rounded-lg shadow-sm transition-colors border border-gray-200 text-base font-medium">
-                            📦 Track my order
-                        </button>
-                        <button class="bg-white hover:bg-purple-50 text-left p-4 rounded-lg shadow-sm transition-colors border border-gray-200 text-base font-medium">
-                            ❓ Product information
-                        </button>
-                        <button class="bg-white hover:bg-purple-50 text-left p-4 rounded-lg shadow-sm transition-colors border border-gray-200 text-base font-medium">
-                            🚚 Shipping details
-                        </button>
                     </div>
                 </div>
             </div>
@@ -394,11 +490,13 @@ const features = [
             <div class="p-5 bg-white border-t border-gray-200">
                 <div class="flex items-center gap-3">
                     <input
+                        v-model="messageInput"
+                        @keypress="handleKeyPress"
                         type="text"
                         placeholder="Type your message..."
                         class="flex-1 px-5 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-600 text-base"
                     />
-                    <button class="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white rounded-full flex items-center justify-center transition-all flex-shrink-0">
+                    <button @click="sendMessage" class="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white rounded-full flex items-center justify-center transition-all flex-shrink-0">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                         </svg>

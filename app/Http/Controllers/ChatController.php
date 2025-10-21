@@ -115,13 +115,16 @@ class ChatController extends Controller
     public function storeCustomerMessage(Request $request)
     {
         $request->validate([
-            'session_id' => 'required|string',
+            'session_id' => 'nullable|string',
             'message' => 'required|string',
             'customer_email' => 'nullable|email',
         ]);
 
+        // Generate session_id if not provided
+        $sessionId = $request->session_id ?? 'session_' . uniqid() . '_' . time();
+
         $message = ChatMessage::create([
-            'session_id' => $request->session_id,
+            'session_id' => $sessionId,
             'customer_email' => $request->customer_email,
             'sender_type' => 'customer',
             'message' => $request->message,
@@ -129,10 +132,11 @@ class ChatController extends Controller
         ]);
 
         // Check if there's an admin response for this session
-        $adminResponse = $this->checkForAdminResponse($request->session_id);
+        $adminResponse = $this->checkForAdminResponse($sessionId);
 
         return response()->json([
             'success' => true,
+            'session_id' => $sessionId,
             'message' => $message,
             'admin_response' => $adminResponse,
         ]);

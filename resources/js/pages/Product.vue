@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue';
 import { Head } from '@inertiajs/vue3';
 
 // Define props
@@ -34,6 +34,13 @@ const cartCount = ref(3);
 
 // Payment method for product page
 const selectedPaymentMethod = ref('pay_now');
+
+// Watch payment method changes and reset quantity to 1 if COD is selected
+watch(selectedPaymentMethod, (newMethod) => {
+    if (newMethod === 'pay_on_delivery' && quantity.value > 1) {
+        quantity.value = 1;
+    }
+});
 
 // Currency conversion
 const userCurrency = ref('USD');
@@ -109,6 +116,10 @@ const selectColor = (colorName: string) => {
 
 // Quantity functionality
 const increaseQuantity = () => {
+    // If payment method is COD, limit to 1 item only
+    if (selectedPaymentMethod.value === 'pay_on_delivery' && quantity.value >= 1) {
+        return;
+    }
     quantity.value++;
 };
 
@@ -890,12 +901,34 @@ const reviews = computed(() => {
                                     </svg>
                             </button>
                                 <span class="text-lg sm:text-xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] min-w-[2rem] text-center">{{ quantity }}</span>
-                                <button @click="increaseQuantity" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-[#d2d2d7] dark:border-[#424245] flex items-center justify-center hover:bg-[#f5f5f7] dark:hover:bg-[#1d1d1f] transition-colors">
-                                    <svg class="w-4 h-4 text-[#1d1d1f] dark:text-[#f5f5f7]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <button
+                                    @click="increaseQuantity"
+                                    :disabled="selectedPaymentMethod === 'pay_on_delivery' && quantity >= 1"
+                                    :class="[
+                                        'w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 flex items-center justify-center transition-colors',
+                                        selectedPaymentMethod === 'pay_on_delivery' && quantity >= 1
+                                            ? 'border-[#e5e5e7] dark:border-[#2d2d2d] bg-[#f5f5f7] dark:bg-[#1d1d1d] cursor-not-allowed opacity-40'
+                                            : 'border-[#d2d2d7] dark:border-[#424245] hover:bg-[#f5f5f7] dark:hover:bg-[#1d1d1f]'
+                                    ]"
+                                >
+                                    <svg
+                                        class="w-4 h-4"
+                                        :class="selectedPaymentMethod === 'pay_on_delivery' && quantity >= 1 ? 'text-[#86868b]' : 'text-[#1d1d1f] dark:text-[#f5f5f7]'"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                     </svg>
                             </button>
                             </div>
+                            <!-- COD Quantity Limit Notice -->
+                            <p v-if="selectedPaymentMethod === 'pay_on_delivery'" class="text-xs sm:text-sm text-[#ff9500] dark:text-[#ff9f0a] mt-2 flex items-center">
+                                <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                </svg>
+                                Cash on Delivery orders are limited to 1 item only
+                            </p>
                         </div>
 
                         <!-- Payment Options -->

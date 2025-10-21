@@ -26,6 +26,8 @@ interface Product {
     price_before: number;
     price_after: number;
     is_active: boolean;
+    paypal_full_payment_url?: string;
+    paypal_cod_payment_url?: string;
 }
 
 const props = defineProps<{
@@ -43,6 +45,8 @@ const form = useForm({
     price_before: props.product.price_before,
     price_after: props.product.price_after,
     is_active: props.product.is_active,
+    paypal_full_payment_url: props.product.paypal_full_payment_url || '',
+    paypal_cod_payment_url: props.product.paypal_cod_payment_url || '',
     _method: 'PUT'
 });
 
@@ -239,6 +243,39 @@ const submit = () => {
                                 <Label for="quantity">Quantity *</Label>
                                 <Input id="quantity" type="number" v-model="form.quantity" required />
                                 <span v-if="form.errors.quantity" class="text-sm text-red-600">{{ form.errors.quantity }}</span>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <!-- Payment Links -->
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Payment Links</CardTitle>
+                            <CardDescription>Add PayPal payment URLs for different payment methods</CardDescription>
+                        </CardHeader>
+                        <CardContent class="space-y-4">
+                            <div class="space-y-2">
+                                <Label for="paypal_full_payment_url">Full Payment URL</Label>
+                                <Input
+                                    id="paypal_full_payment_url"
+                                    type="url"
+                                    v-model="form.paypal_full_payment_url"
+                                    placeholder="https://www.paypal.com/ncp/payment/..."
+                                />
+                                <span v-if="form.errors.paypal_full_payment_url" class="text-sm text-red-600">{{ form.errors.paypal_full_payment_url }}</span>
+                                <p class="text-sm text-gray-500">URL for customers who want to pay the full amount immediately</p>
+                            </div>
+
+                            <div class="space-y-2">
+                                <Label for="paypal_cod_payment_url">Cash on Delivery Payment URL</Label>
+                                <Input
+                                    id="paypal_cod_payment_url"
+                                    type="url"
+                                    v-model="form.paypal_cod_payment_url"
+                                    placeholder="https://www.paypal.com/ncp/payment/..."
+                                />
+                                <span v-if="form.errors.paypal_cod_payment_url" class="text-sm text-red-600">{{ form.errors.paypal_cod_payment_url }}</span>
+                                <p class="text-sm text-gray-500">URL for customers who want to pay shipping fee now and full amount on delivery</p>
                             </div>
                         </CardContent>
                     </Card>

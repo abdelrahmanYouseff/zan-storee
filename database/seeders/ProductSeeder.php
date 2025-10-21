@@ -38,7 +38,5 @@ class ProductSeeder extends Seeder
             'price_after' => 559.00,
             'is_active' => true,
         ]);
-
-
     }
 }

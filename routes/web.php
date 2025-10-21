@@ -64,6 +64,11 @@ Route::delete('dashboard/products/{product}', [\App\Http\Controllers\Admin\Produ
     ->middleware(['auth', 'verified'])
     ->name('dashboard.products.destroy');
 
+// Admin Visitors Routes
+Route::get('dashboard/visitors', [\App\Http\Controllers\Admin\VisitorController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.visitors');
+
 Route::get('orders', [OrderController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('orders');

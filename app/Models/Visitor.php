@@ -8,13 +8,13 @@ class Visitor extends Model
 {
     protected $fillable = [
         'ip_address',
-        'user_agent',
         'country',
+        'country_code',
         'city',
-        'page_url',
+        'region',
+        'user_agent',
+        'page_visited',
         'referrer',
-        'device_type',
-        'browser',
     ];
 
     protected $casts = [
@@ -57,13 +57,16 @@ class Visitor extends Model
     }
 
     /**
-     * Get visitors by device type
+     * Get visitors by country
      */
-    public static function getByDeviceType()
+    public static function getByCountry($limit = 10)
     {
-        return self::select('device_type')
+        return self::select('country', 'country_code')
             ->selectRaw('COUNT(*) as count')
-            ->groupBy('device_type')
+            ->whereNotNull('country')
+            ->groupBy('country', 'country_code')
+            ->orderBy('count', 'desc')
+            ->limit($limit)
             ->get();
     }
 

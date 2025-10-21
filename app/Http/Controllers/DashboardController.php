@@ -24,7 +24,7 @@ class DashboardController extends Controller
         $totalVisits = Visitor::getTotalVisits();
         $todayVisitors = Visitor::getTodayVisitors();
         $todayVisits = Visitor::getTodayVisits();
-        $deviceStats = Visitor::getByDeviceType();
+        $countryStats = Visitor::getByCountry(5);
         $recentVisitors = Visitor::getRecent(10);
 
         return Inertia::render('Dashboard', [
@@ -37,7 +37,7 @@ class DashboardController extends Controller
                 'todayVisits' => $todayVisits,
             ],
             'recentOrders' => $recentOrders,
-            'deviceStats' => $deviceStats,
+            'countryStats' => $countryStats,
             'recentVisitors' => $recentVisitors,
         ]);
     }

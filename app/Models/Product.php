@@ -17,6 +17,8 @@ class Product extends Model
         'price_before',
         'price_after',
         'is_active',
+        'paypal_full_payment_url',
+        'paypal_cod_payment_url',
     ];
 
     protected $casts = [

@@ -45,7 +45,9 @@ class ProductController extends Controller
             'quantity' => 'required|integer|min:0',
             'price_before' => 'required|numeric|min:0',
             'price_after' => 'required|numeric|min:0',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'paypal_full_payment_url' => 'nullable|url',
+            'paypal_cod_payment_url' => 'nullable|url'
         ]);
 
         // Handle main image upload
@@ -91,7 +93,9 @@ class ProductController extends Controller
             'quantity' => 'required|integer|min:0',
             'price_before' => 'required|numeric|min:0',
             'price_after' => 'required|numeric|min:0',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'paypal_full_payment_url' => 'nullable|url',
+            'paypal_cod_payment_url' => 'nullable|url'
         ]);
 
         // Handle main image upload if new image provided

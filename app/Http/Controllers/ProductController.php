@@ -26,6 +26,8 @@ class ProductController extends Controller
             'priceBefore' => (float) $product->price_before,
             'priceAfter' => (float) $product->price_after,
             'discount' => $product->discount_percentage ?? 0,
+            'paypal_full_payment_url' => $product->paypal_full_payment_url,
+            'paypal_cod_payment_url' => $product->paypal_cod_payment_url,
         ];
 
         return Inertia::render('Product', [

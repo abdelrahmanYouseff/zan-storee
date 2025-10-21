@@ -29,11 +29,16 @@ declare global {
 const selectedImage = ref(0);
 const quantity = ref(1);
 const isChatOpen = ref(false);
+const isCheckoutOpen = ref(false);
 const isMobileMenuOpen = ref(false);
 const cartCount = ref(3);
-
-// Payment method for product page
-const selectedPaymentMethod = ref('pay_now');
+const checkoutForm = ref({
+    customer_name: '',
+    customer_email: '',
+    customer_phone: '',
+    shipping_address: '',
+    payment_method: 'pay_now' // 'pay_now' or 'pay_on_delivery'
+});
 
 // Currency conversion
 const userCurrency = ref('USD');
@@ -548,20 +553,25 @@ const handleMessageSubmit = () => {
     messageInput.value = '';
 };
 
-// Direct checkout to PayPal based on payment method
-const proceedToCheckout = () => {
-    let paymentUrl = '';
+// Checkout functionality
+const openCheckout = () => {
+    isCheckoutOpen.value = true;
+    // Load PayPal buttons after modal opens
+    setTimeout(() => {
+        loadPayPalButtons();
+    }, 100);
+};
 
-    if (selectedPaymentMethod.value === 'pay_now') {
-        // Use full payment URL
-        paymentUrl = productData.value.paypal_full_payment_url || 'https://www.paypal.com/ncp/payment/7WMANWRCHP896';
-    } else {
-        // Use COD payment URL
-        paymentUrl = productData.value.paypal_cod_payment_url || 'https://www.paypal.com/ncp/payment/7WMANWRCHP896';
-    }
-
-    // Open PayPal payment page
-    window.open(paymentUrl, '_blank');
+const closeCheckout = () => {
+    isCheckoutOpen.value = false;
+    // Reset form
+    checkoutForm.value = {
+        customer_name: '',
+        customer_email: '',
+        customer_phone: '',
+        shipping_address: '',
+        payment_method: 'pay_now'
+    };
 };
 
 const getSelectedColor = () => {
@@ -587,7 +597,47 @@ const formatCurrency = (amount: number, currency: string = 'USD') => {
     }).format(amount);
 };
 
-// PayPal functions removed - using direct checkout link instead
+const loadPayPalButtons = () => {
+    // Load PayPal SDK if not already loaded
+    if (!window.paypal) {
+        const script = document.createElement('script');
+        script.src = 'https://www.paypal.com/sdk/js?client-id=BAAnWbwo7vDF9gfAtzKHX3iHd8D3G1_P2siviATC-RZhgy_dWeY6sII-Y3YSm5DWtuJ3sHNuyll5KU7Pmg&components=hosted-buttons&disable-funding=venmo&currency=USD';
+        script.async = true;
+        script.onload = () => {
+            if (window.paypal) {
+                window.paypal.HostedButtons({
+                    hostedButtonId: "7WMANWRCHP896",
+                }).render("#paypal-container-7WMANWRCHP896").then(() => {
+                    // Store form data when PayPal buttons are ready
+                    sessionStorage.setItem('checkoutData', JSON.stringify({
+                        ...checkoutForm.value,
+                        product_name: 'iPhone 17 Pro Max 512GB',
+                        product_color: getSelectedColor(),
+                        quantity: quantity.value,
+                        unit_price: productData.value.priceAfter,
+                        total_amount: totalPrice.value
+                    }));
+                });
+            }
+        };
+        document.head.appendChild(script);
+    } else {
+        // PayPal SDK already loaded, render buttons
+        window.paypal.HostedButtons({
+            hostedButtonId: "7WMANWRCHP896",
+        }).render("#paypal-container-7WMANWRCHP896").then(() => {
+            // Store form data when PayPal buttons are ready
+            sessionStorage.setItem('checkoutData', JSON.stringify({
+                ...checkoutForm.value,
+                product_name: 'iPhone 17 Pro Max 512GB',
+                product_color: getSelectedColor(),
+                quantity: quantity.value,
+                unit_price: product.newPrice,
+                total_amount: totalPrice.value
+            }));
+        });
+    }
+};
 
 
 onMounted(() => {
@@ -602,7 +652,34 @@ onMounted(() => {
     // Start polling for admin responses
     startAdminPolling();
 
-    // PayPal SDK removed - using direct checkout link instead
+    // Load PayPal SDK
+    const script = document.createElement('script');
+    script.src = 'https://www.paypal.com/sdk/js?client-id=BAAnWbwo7vDF9gfAtzKHX3iHd8D3G1_P2siviATC-RZhgy_dWeY6sII-Y3YSm5DWtuJ3sHNuyll5KU7Pmg&components=hosted-buttons&disable-funding=venmo&currency=USD';
+    script.async = true;
+    script.onload = () => {
+        // Render PayPal button after SDK loads
+        if (window.paypal) {
+            window.paypal.HostedButtons({
+                hostedButtonId: "7WMANWRCHP896",
+            }).render("#paypal-container-7WMANWRCHP896").then(() => {
+                // Hide only product details text, not buttons
+                setTimeout(() => {
+                    const container = document.getElementById('paypal-container-7WMANWRCHP896');
+                    if (container) {
+                        // Find and hide only the text elements, not iframe or button containers
+                        const allDivs = container.querySelectorAll('div:not([id*="zoid"])');
+                        allDivs.forEach((div: HTMLElement) => {
+                            const hasButton = div.querySelector('iframe') || div.querySelector('[id*="zoid"]');
+                            if (!hasButton && (div.textContent?.includes('Apple iPhone') || div.textContent?.includes('$559') || div.textContent?.includes('USD'))) {
+                                div.style.display = 'none';
+                            }
+                        });
+                    }
+                }, 1000);
+            });
+        }
+    };
+    document.head.appendChild(script);
 });
 
 onUnmounted(() => {
@@ -847,7 +924,7 @@ const reviews = computed(() => {
                         </div>
                                 </div>
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-[#ff3b30] text-white self-start">
-                                    Save 20%
+                                    Save {{ productData.discount }}%
                                 </span>
                             </div>
                             <p class="text-sm text-[#86868b] dark:text-[#6e6e73] mb-3">
@@ -896,108 +973,9 @@ const reviews = computed(() => {
                             </div>
                         </div>
 
-                        <!-- Payment Options -->
-                        <div class="mb-6 sm:mb-8">
-                            <h3 class="text-sm sm:text-base font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-4">
-                                Choose Payment Method
-                            </h3>
-                            <div class="space-y-3">
-                                <label class="group relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200" :class="selectedPaymentMethod === 'pay_now' ? 'border-[#0071e3] bg-[#0071e3]/5' : 'border-[#e5e5e7] dark:border-[#424245] hover:border-[#0071e3]/50'">
-                                    <input type="radio" v-model="selectedPaymentMethod" value="pay_now" class="sr-only" />
-                                    <div class="flex items-center space-x-4 w-full">
-                                        <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center" :class="selectedPaymentMethod === 'pay_now' ? 'border-[#0071e3] bg-[#0071e3]' : 'border-[#d2d2d7] dark:border-[#424245]'">
-                                            <div v-if="selectedPaymentMethod === 'pay_now'" class="w-2 h-2 bg-white rounded-full"></div>
-                                        </div>
-                                        <div class="flex-1">
-                                            <div class="flex items-center space-x-2">
-                                                <svg class="w-5 h-5 text-[#0071e3]" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
-                                                </svg>
-                                                <span class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Pay Now (Full Amount)</span>
-                                            </div>
-                                            <div class="mt-2">
-                                                <div class="flex items-center space-x-2">
-                                                    <!-- Visa Icon -->
-                                                    <div class="w-8 h-5 bg-[#1a1f71] rounded flex items-center justify-center shadow-sm">
-                                                        <span class="text-white text-xs font-bold">VISA</span>
-                                                    </div>
-                                                    <!-- Mastercard Icon -->
-                                                    <div class="w-8 h-5 bg-[#eb001b] rounded flex items-center justify-center relative overflow-hidden shadow-sm">
-                                                        <div class="w-4 h-4 bg-[#f79e1b] rounded-full absolute -left-1"></div>
-                                                        <div class="w-4 h-4 bg-[#eb001b] rounded-full absolute -right-1"></div>
-                                                    </div>
-                                                    <!-- American Express Icon -->
-                                                    <div class="w-8 h-5 bg-[#006fcf] rounded flex items-center justify-center shadow-sm">
-                                                        <span class="text-white text-xs font-bold">AE</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </label>
-
-                                <label class="group relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200" :class="selectedPaymentMethod === 'pay_on_delivery' ? 'border-[#0071e3] bg-[#0071e3]/5' : 'border-[#e5e5e7] dark:border-[#424245] hover:border-[#0071e3]/50'">
-                                    <input type="radio" v-model="selectedPaymentMethod" value="pay_on_delivery" class="sr-only" />
-                                    <div class="flex items-center space-x-4 w-full">
-                                        <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center" :class="selectedPaymentMethod === 'pay_on_delivery' ? 'border-[#0071e3] bg-[#0071e3]' : 'border-[#d2d2d7] dark:border-[#424245]'">
-                                            <div v-if="selectedPaymentMethod === 'pay_on_delivery'" class="w-2 h-2 bg-white rounded-full"></div>
-                                        </div>
-                                        <div class="flex-1">
-                                            <div class="flex items-center space-x-2">
-                                                <svg class="w-5 h-5 text-[#34c759]" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.155.103.346.196.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
-                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
-                                                </svg>
-                                                <span class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Pay on Delivery</span>
-                                            </div>
-                                            <p class="text-sm text-[#86868b] dark:text-[#a1a1a6] mt-1">Pay {{ currencySymbols[userCurrency] }}50 shipping now, {{ formatPrice(totalPrice) }} on delivery</p>
-                                        </div>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Payment Summary -->
-                        <div class="mb-6 sm:mb-8 bg-[#f5f5f7] dark:bg-[#2d2d2d] rounded-xl p-4">
-                            <h4 class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-3">Payment Summary</h4>
-                            <div v-if="selectedPaymentMethod === 'pay_now'" class="space-y-2">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm text-[#86868b] dark:text-[#a1a1a6]">Product Amount</span>
-                                    <span class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{{ formatPrice(totalPrice) }}</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm text-[#86868b] dark:text-[#a1a1a6]">Shipping Fee</span>
-                                    <span class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{{ currencySymbols[userCurrency] }}49</span>
-                                </div>
-                                <div class="border-t border-[#d2d2d7] dark:border-[#424245] pt-2">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-lg font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Total to Pay Now</span>
-                                        <span class="text-xl font-bold text-[#0071e3]">{{ currencySymbols[userCurrency] }}{{ (totalPrice + 49).toLocaleString() }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div v-else class="space-y-2">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm text-[#86868b] dark:text-[#a1a1a6]">Shipping Fee (Pay Now)</span>
-                                    <span class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{{ currencySymbols[userCurrency] }}50</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm text-[#86868b] dark:text-[#a1a1a6]">Product Amount (Pay on Delivery)</span>
-                                    <span class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{{ formatPrice(totalPrice) }}</span>
-                                </div>
-                                <div class="border-t border-[#d2d2d7] dark:border-[#424245] pt-2">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-lg font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Amount to Pay Now</span>
-                                        <span class="text-xl font-bold text-[#0071e3]">{{ currencySymbols[userCurrency] }}50</span>
-                                    </div>
-                                    <p class="text-xs text-[#86868b] dark:text-[#a1a1a6] mt-1">Remaining {{ formatPrice(totalPrice) }} to be paid on delivery</p>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Checkout Button -->
                         <div class="mb-6 sm:mb-8">
-                            <button @click="proceedToCheckout" class="w-full bg-[#1d1d1f] dark:bg-[#1d1d1f] hover:bg-[#2d2d2d] dark:hover:bg-[#2d2d2d] text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center">
+                            <button @click="openCheckout" class="w-full bg-[#1d1d1f] dark:bg-[#1d1d1f] hover:bg-[#2d2d2d] dark:hover:bg-[#2d2d2d] text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center">
                                 <span>Proceed to Checkout</span>
                             </button>
                         </div>
@@ -1012,7 +990,7 @@ const reviews = computed(() => {
                                 </svg>
                                 <div>
                                     <p class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] text-sm sm:text-base">Free Delivery</p>
-                                    <p class="text-xs sm:text-sm text-[#86868b] dark:text-[#6e6e73]">21-day shipping on all orders</p>
+                                    <p class="text-xs sm:text-sm text-[#86868b] dark:text-[#6e6e73]">2-day shipping on all orders</p>
                                 </div>
                             </div>
                             <div class="flex items-start space-x-3">
@@ -1373,6 +1351,243 @@ const reviews = computed(() => {
             </div>
         </div>
 
+        <!-- Checkout Modal -->
+        <div v-if="isCheckoutOpen" @click="closeCheckout" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in duration-300 p-4">
+            <div @click.stop class="bg-white dark:bg-[#1d1d1f] rounded-3xl shadow-2xl w-full max-w-4xl mx-auto max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-100 animate-in zoom-in-95 duration-300">
+                <!-- Modal Header -->
+                <div class="bg-gradient-to-r from-[#0071e3] to-[#0077ed] px-8 py-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold">Complete Your Order</h2>
+                            <p class="text-white/80 text-sm mt-1">Secure checkout with Apple Pay & PayPal</p>
+                        </div>
+                        <button @click="closeCheckout" class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal Content -->
+                <div class="p-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Order Summary -->
+                        <div class="space-y-6">
+                            <div class="bg-gradient-to-br from-[#f8f9fa] to-[#ffffff] dark:from-[#1d1d1f] dark:to-[#2d2d2d] rounded-2xl p-6 border border-[#e5e5e7] dark:border-[#424245]">
+                                <div class="flex items-center space-x-3 mb-6">
+                                    <div class="w-12 h-12 bg-gradient-to-r from-[#0071e3] to-[#0077ed] rounded-xl flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7]">Order Summary</h3>
+                                        <p class="text-sm text-[#86868b] dark:text-[#a1a1a6]">Review your items</p>
+                                    </div>
+                                </div>
+
+                                <!-- Product Details -->
+                                <div class="bg-white dark:bg-[#1d1d1f] rounded-xl p-4 border border-[#e5e5e7] dark:border-[#424245]">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="relative">
+                                            <img :src="productImages[selectedImage]" :alt="productData.name" class="w-20 h-20 object-contain rounded-xl bg-[#f5f5f7] dark:bg-[#2d2d2d] p-3" />
+                                            <div class="absolute -top-1 -right-1 w-6 h-6 bg-[#0071e3] text-white text-xs font-bold rounded-full flex items-center justify-center">{{ quantity }}</div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h4 class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] text-base">{{ productData.name }}</h4>
+                                            <p class="text-sm text-[#86868b] dark:text-[#a1a1a6] mt-1">Color: {{ getSelectedColor() }}</p>
+                                            <div class="flex items-center justify-between mt-2">
+                                                <span class="text-sm text-[#86868b] dark:text-[#a1a1a6]">Quantity: {{ quantity }}</span>
+                                                <span class="text-lg font-bold text-[#1d1d1f] dark:text-[#f5f5f7]">{{ formatPrice(totalPrice) }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Options -->
+                                <div class="space-y-4">
+                                    <h4 class="text-lg font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Payment Method</h4>
+                                    <div class="space-y-3">
+                                        <label class="group relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200" :class="checkoutForm.payment_method === 'pay_now' ? 'border-[#0071e3] bg-[#0071e3]/5' : 'border-[#e5e5e7] dark:border-[#424245] hover:border-[#0071e3]/50'">
+                                            <input type="radio" v-model="checkoutForm.payment_method" value="pay_now" class="sr-only" />
+                                            <div class="flex items-center space-x-4 w-full">
+                                                <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center" :class="checkoutForm.payment_method === 'pay_now' ? 'border-[#0071e3] bg-[#0071e3]' : 'border-[#d2d2d7] dark:border-[#424245]'">
+                                                    <div v-if="checkoutForm.payment_method === 'pay_now'" class="w-2 h-2 bg-white rounded-full"></div>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <div class="flex items-center space-x-2">
+                                                        <svg class="w-5 h-5 text-[#0071e3]" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+                                                        </svg>
+                                                        <span class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Pay Now (Full Amount)</span>
+                                                    </div>
+                                                    <p class="text-sm text-[#86868b] dark:text-[#a1a1a6] mt-1">Pay {{ formatPrice(totalPrice) }} now via PayPal</p>
+                                                </div>
+                                            </div>
+                                        </label>
+
+                                        <label class="group relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200" :class="checkoutForm.payment_method === 'pay_on_delivery' ? 'border-[#0071e3] bg-[#0071e3]/5' : 'border-[#e5e5e7] dark:border-[#424245] hover:border-[#0071e3]/50'">
+                                            <input type="radio" v-model="checkoutForm.payment_method" value="pay_on_delivery" class="sr-only" />
+                                            <div class="flex items-center space-x-4 w-full">
+                                                <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center" :class="checkoutForm.payment_method === 'pay_on_delivery' ? 'border-[#0071e3] bg-[#0071e3]' : 'border-[#d2d2d7] dark:border-[#424245]'">
+                                                    <div v-if="checkoutForm.payment_method === 'pay_on_delivery'" class="w-2 h-2 bg-white rounded-full"></div>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <div class="flex items-center space-x-2">
+                                                        <svg class="w-5 h-5 text-[#34c759]" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.155.103.346.196.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                        <span class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Pay on Delivery</span>
+                                                    </div>
+                                                    <p class="text-sm text-[#86868b] dark:text-[#a1a1a6] mt-1">Pay {{ currencySymbols[userCurrency] }}50 shipping now, {{ formatPrice(totalPrice) }} on delivery</p>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                        <!-- Payment Summary & Form -->
+                        <div class="space-y-6">
+                            <!-- Payment Summary -->
+                            <div class="bg-gradient-to-br from-[#f8f9fa] to-[#ffffff] dark:from-[#1d1d1f] dark:to-[#2d2d2d] rounded-2xl p-6 border border-[#e5e5e7] dark:border-[#424245]">
+                                <div class="flex items-center space-x-3 mb-6">
+                                    <div class="w-12 h-12 bg-gradient-to-r from-[#34c759] to-[#30d158] rounded-xl flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7]">Payment Summary</h3>
+                                        <p class="text-sm text-[#86868b] dark:text-[#a1a1a6]">Review your payment details</p>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Summary Content -->
+                                <div class="space-y-4">
+                                    <div v-if="checkoutForm.payment_method === 'pay_now'" class="bg-white dark:bg-[#1d1d1f] rounded-xl p-4 border border-[#e5e5e7] dark:border-[#424245]">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-lg font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Total to Pay Now</span>
+                                            <span class="text-2xl font-bold text-[#0071e3]">{{ formatPrice(totalPrice) }}</span>
+                                        </div>
+                                        <p class="text-sm text-[#86868b] dark:text-[#a1a1a6] mt-2">Full payment via PayPal</p>
+                                    </div>
+                                    <div v-else class="space-y-3">
+                                        <div class="bg-white dark:bg-[#1d1d1f] rounded-xl p-4 border border-[#e5e5e7] dark:border-[#424245]">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-sm text-[#86868b] dark:text-[#a1a1a6]">Shipping Fee (Pay Now)</span>
+                                                <span class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{{ currencySymbols[userCurrency] }}50</span>
+                                            </div>
+                                        </div>
+                                        <div class="bg-white dark:bg-[#1d1d1f] rounded-xl p-4 border border-[#e5e5e7] dark:border-[#424245]">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-sm text-[#86868b] dark:text-[#a1a1a6]">Product Amount (Pay on Delivery)</span>
+                                                <span class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{{ formatPrice(totalPrice) }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="bg-gradient-to-r from-[#0071e3] to-[#0077ed] rounded-xl p-4 text-white">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-lg font-semibold">Amount to Pay Now</span>
+                                                <span class="text-2xl font-bold">{{ currencySymbols[userCurrency] }}50</span>
+                                            </div>
+                                            <p class="text-white/80 text-sm mt-1">Remaining {{ formatPrice(totalPrice) }} to be paid on delivery</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Customer Information Form -->
+                            <div class="bg-gradient-to-br from-[#f8f9fa] to-[#ffffff] dark:from-[#1d1d1f] dark:to-[#2d2d2d] rounded-2xl p-6 border border-[#e5e5e7] dark:border-[#424245]">
+                                <div class="flex items-center space-x-3 mb-6">
+                                    <div class="w-12 h-12 bg-gradient-to-r from-[#ff9500] to-[#ff6b35] rounded-xl flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7]">Customer Information</h3>
+                                        <p class="text-sm text-[#86868b] dark:text-[#a1a1a6]">Enter your details</p>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-2">
+                                            Full Name *
+                                        </label>
+                                        <input
+                                            v-model="checkoutForm.customer_name"
+                                            type="text"
+                                            required
+                                            class="w-full px-4 py-3 text-base border-2 border-[#e5e5e7] dark:border-[#424245] rounded-xl bg-white dark:bg-[#1d1d1f] text-[#1d1d1f] dark:text-[#f5f5f7] focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-[#0071e3] transition-all duration-200"
+                                            placeholder="Enter your full name"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-2">
+                                            Email Address *
+                                        </label>
+                                        <input
+                                            v-model="checkoutForm.customer_email"
+                                            type="email"
+                                            required
+                                            class="w-full px-4 py-3 text-base border-2 border-[#e5e5e7] dark:border-[#424245] rounded-xl bg-white dark:bg-[#1d1d1f] text-[#1d1d1f] dark:text-[#f5f5f7] focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-[#0071e3] transition-all duration-200"
+                                            placeholder="Enter your email address"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-2">
+                                            Phone Number *
+                                        </label>
+                                        <input
+                                            v-model="checkoutForm.customer_phone"
+                                            type="tel"
+                                            required
+                                            class="w-full px-4 py-3 text-base border-2 border-[#e5e5e7] dark:border-[#424245] rounded-xl bg-white dark:bg-[#1d1d1f] text-[#1d1d1f] dark:text-[#f5f5f7] focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-[#0071e3] transition-all duration-200"
+                                            placeholder="Enter your phone number"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-2">
+                                            Shipping Address *
+                                        </label>
+                                        <textarea
+                                            v-model="checkoutForm.shipping_address"
+                                            required
+                                            rows="3"
+                                            class="w-full px-4 py-3 text-base border-2 border-[#e5e5e7] dark:border-[#424245] rounded-xl bg-white dark:bg-[#1d1d1f] text-[#1d1d1f] dark:text-[#f5f5f7] focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-[#0071e3] transition-all duration-200 resize-none"
+                                            placeholder="Enter your complete shipping address"
+                                        ></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="bg-gradient-to-r from-[#f8f9fa] to-[#ffffff] dark:from-[#1d1d1f] dark:to-[#2d2d2d] px-8 py-6 border-t border-[#e5e5e7] dark:border-[#424245]">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-[#86868b] dark:text-[#a1a1a6]">
+                            <p>🔒 Secure checkout with SSL encryption</p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <button @click="closeCheckout" class="px-6 py-2 text-[#86868b] dark:text-[#a1a1a6] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] transition-colors font-medium">
+                                Cancel
+                            </button>
+                            <div class="bg-white dark:bg-[#1d1d1f] rounded-xl p-1 border border-[#e5e5e7] dark:border-[#424245]">
+                                <div id="paypal-container-7WMANWRCHP896"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Footer -->
         <footer class="bg-gray-900 text-gray-300 mt-16">
@@ -1482,7 +1697,10 @@ html {
     background: #6e6e73;
 }
 
-/* PayPal styling removed */
+/* PayPal container styling */
+#paypal-container-7WMANWRCHP896 {
+    min-height: 50px;
+}
 
 /* Force light mode on mobile and all devices */
 html {

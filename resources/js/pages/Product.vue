@@ -637,7 +637,9 @@ const productData = computed(() => {
             quantity: 100,
             priceBefore: 1119,
             priceAfter: 559,
-            discount: 50
+            discount: 50,
+            paypal_full_payment_url: 'https://www.paypal.com/ncp/payment/7WMANWRCHP896',
+            paypal_cod_payment_url: 'https://www.paypal.com/ncp/payment/7WMANWRCHP896'
         };
     }
     return props.product;

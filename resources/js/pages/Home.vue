@@ -340,7 +340,7 @@ const features = [
                                 </span>
                             </div>
                 <h1 class="text-4xl md:text-6xl font-bold leading-tight">
-                    50% OFF on All Products — Limited Time Only!
+                    20% OFF on All Products — Limited Time Only!
                 </h1>
 
                             <!-- Partner Image -->

@@ -98,6 +98,8 @@ Route::post('api/chat/customer/send', [\App\Http\Controllers\ChatController::cla
 
 Route::get('api/chat/{sessionId}/admin-responses', [\App\Http\Controllers\ChatController::class, 'getAdminResponses']);
 
+Route::get('api/chat/{sessionId}/admin-status', [\App\Http\Controllers\ChatController::class, 'getAdminStatus']);
+
 Route::get('api/chat/unread-count', [\App\Http\Controllers\ChatController::class, 'getUnreadCount'])
     ->middleware(['auth', 'verified']);
 

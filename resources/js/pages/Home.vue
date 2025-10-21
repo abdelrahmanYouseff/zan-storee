@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, onMounted, onUnmounted } from 'vue';
 
 interface Product {
     id: number;
@@ -34,7 +34,18 @@ const chatMessages = ref([
     }
 ]);
 const isTyping = ref(false);
-const chatSessionId = ref<string | null>(null);
+const chatSessionId = ref<string | null>(localStorage.getItem('chatSessionId'));
+const hasReceivedWelcomeMessage = ref(localStorage.getItem('hasReceivedWelcomeMessage') === 'true');
+const adminOnline = ref(false);
+const adminName = ref('');
+
+// Generated staff names
+const staffNames = [
+    'Sarah Johnson', 'Michael Chen', 'Emily Rodriguez', 'David Kim', 'Lisa Thompson',
+    'James Wilson', 'Maria Garcia', 'Robert Brown', 'Jennifer Lee', 'Christopher Davis',
+    'Amanda Taylor', 'Daniel Martinez', 'Jessica White', 'Matthew Anderson', 'Ashley Thomas',
+    'Ryan Jackson', 'Nicole Harris', 'Kevin Clark', 'Stephanie Lewis', 'Brandon Walker'
+];
 
 const toggleMobileMenu = () => {
     isMobileMenuOpen.value = !isMobileMenuOpen.value;
@@ -101,14 +112,27 @@ const sendMessage = async () => {
 
         const data = await response.json();
 
+        console.log('Send message response:', data);
+
         if (data.success) {
             chatSessionId.value = data.session_id;
+            localStorage.setItem('chatSessionId', data.session_id);
+            console.log('Session ID set to:', chatSessionId.value);
 
-            // Add confirmation message
-            setTimeout(() => {
+            // Start polling for admin responses
+            startPolling();
+
+            // Add confirmation message only if not received before
+            if (!hasReceivedWelcomeMessage.value) {
+                setTimeout(() => {
+                    isTyping.value = false;
+                    addMessage('bot', 'Thank you for your message! Our team will respond shortly. 💬');
+                    hasReceivedWelcomeMessage.value = true;
+                    localStorage.setItem('hasReceivedWelcomeMessage', 'true');
+                }, 1000);
+            } else {
                 isTyping.value = false;
-                addMessage('bot', 'Thank you for your message! Our team will respond shortly. 💬');
-            }, 1000);
+            }
         }
     } catch (error) {
         console.error('Error sending message:', error);
@@ -124,6 +148,104 @@ const handleKeyPress = (event: KeyboardEvent) => {
         sendMessage();
     }
 };
+
+// Check if admin is online
+const checkAdminStatus = async () => {
+    if (!chatSessionId.value) return;
+
+    try {
+        const response = await fetch(`/api/chat/${chatSessionId.value}/admin-status`);
+        const data = await response.json();
+
+        if (data.success && data.admin_online && !adminOnline.value) {
+            adminOnline.value = true;
+            adminName.value = data.admin_name || staffNames[Math.floor(Math.random() * staffNames.length)];
+
+            // Add admin online message
+            addMessage('bot', `👋 Connected to ${adminName.value}! They're happy and ready to chat with you!`);
+
+            // Play notification sound
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBS13yO+eizEIHWq+8+OWT');
+                audio.play().catch(() => {});
+            } catch (e) {}
+        }
+    } catch (error) {
+        console.error('Error checking admin status:', error);
+    }
+};
+
+// Poll for admin responses
+const pollForAdminResponses = async () => {
+    if (!chatSessionId.value) {
+        console.log('No session ID, skipping poll');
+        return;
+    }
+
+    console.log('Polling for admin responses, session:', chatSessionId.value);
+
+    try {
+        const response = await fetch(`/api/chat/${chatSessionId.value}/admin-responses`);
+        const data = await response.json();
+
+        console.log('Poll response:', data);
+
+        if (data.success && data.messages.length > 0) {
+            console.log('Received admin messages:', data.messages);
+            data.messages.forEach((msg: any) => {
+                addMessage('bot', msg.message);
+            });
+
+            // Play notification sound
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBS13yO/eizEIHWq+8+OWT');
+                audio.play().catch(() => {});
+            } catch (e) {}
+
+            // Show notification if chat is closed
+            if (!isChatOpen.value) {
+                console.log('New admin message received while chat is closed');
+            }
+        } else {
+            console.log('No new admin messages');
+        }
+    } catch (error) {
+        console.error('Error polling for admin responses:', error);
+    }
+};
+
+// Start polling when chat session exists
+let pollingInterval: any = null;
+const startPolling = () => {
+    console.log('Starting polling...');
+    if (pollingInterval) clearInterval(pollingInterval);
+    pollingInterval = setInterval(() => {
+        console.log('Polling interval triggered, session:', chatSessionId.value, 'chat open:', isChatOpen.value);
+        if (chatSessionId.value) {
+            checkAdminStatus();
+            pollForAdminResponses();
+        }
+    }, 2000); // Poll every 2 seconds for faster response
+};
+
+const stopPolling = () => {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+    }
+};
+
+// Start polling when component mounts
+onMounted(() => {
+    if (chatSessionId.value) {
+        console.log('Found existing session on mount:', chatSessionId.value);
+        startPolling();
+    }
+});
+
+onUnmounted(() => {
+    stopPolling();
+});
 
 const features = [
     {
@@ -441,7 +563,13 @@ const features = [
                         </div>
                         <div>
                             <h3 class="font-semibold text-lg">Zan Store Support</h3>
-                            <p class="text-sm text-white/80">We're here to help!</p>
+                            <p class="text-sm text-white/80">
+                                <span v-if="adminOnline && adminName" class="flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                                    Connected to {{ adminName }}
+                                </span>
+                                <span v-else>We're here to help!</span>
+                            </p>
                         </div>
                     </div>
                     <button @click="toggleChat" class="text-white/80 hover:text-white transition-colors">

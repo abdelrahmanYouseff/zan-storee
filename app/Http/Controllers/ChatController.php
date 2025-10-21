@@ -147,17 +147,20 @@ class ChatController extends Controller
      */
     public function getAdminResponses($sessionId)
     {
+        // Get unread admin messages
         $messages = ChatMessage::where('session_id', $sessionId)
             ->where('sender_type', 'admin')
             ->where('is_read', false)
             ->orderBy('created_at', 'asc')
             ->get();
 
-        // Mark as read
-        ChatMessage::where('session_id', $sessionId)
-            ->where('sender_type', 'admin')
-            ->where('is_read', false)
-            ->update(['is_read' => true]);
+        // Only mark as read if there are messages
+        if ($messages->isNotEmpty()) {
+            // Mark these specific messages as read
+            $messageIds = $messages->pluck('id')->toArray();
+            ChatMessage::whereIn('id', $messageIds)
+                ->update(['is_read' => true]);
+        }
 
         return response()->json([
             'success' => true,
@@ -190,6 +193,32 @@ class ChatController extends Controller
         return response()->json([
             'success' => true,
             'unread_count' => $unreadCount,
+        ]);
+    }
+
+    /**
+     * Check admin status for a session
+     */
+    public function getAdminStatus($sessionId)
+    {
+        // Check if there are any admin messages in the last 5 minutes
+        $recentAdminMessages = ChatMessage::where('session_id', $sessionId)
+            ->where('sender_type', 'admin')
+            ->where('created_at', '>=', now()->subMinutes(5))
+            ->exists();
+
+        // Generate a random staff name
+        $staffNames = [
+            'Sarah Johnson', 'Michael Chen', 'Emily Rodriguez', 'David Kim', 'Lisa Thompson',
+            'James Wilson', 'Maria Garcia', 'Robert Brown', 'Jennifer Lee', 'Christopher Davis',
+            'Amanda Taylor', 'Daniel Martinez', 'Jessica White', 'Matthew Anderson', 'Ashley Thomas',
+            'Ryan Jackson', 'Nicole Harris', 'Kevin Clark', 'Stephanie Lewis', 'Brandon Walker'
+        ];
+
+        return response()->json([
+            'success' => true,
+            'admin_online' => $recentAdminMessages,
+            'admin_name' => $recentAdminMessages ? $staffNames[array_rand($staffNames)] : null,
         ]);
     }
 

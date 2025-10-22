@@ -1002,12 +1002,12 @@ const reviews = computed(() => {
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-[#86868b] dark:text-[#a1a1a6]">Shipping Fee</span>
-                                    <span class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{{ currencySymbols[userCurrency] }}49</span>
+                                    <span class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{{ currencySymbols[userCurrency] }}59</span>
                                 </div>
                                 <div class="border-t border-[#d2d2d7] dark:border-[#424245] pt-2">
                                     <div class="flex justify-between items-center">
                                         <span class="text-lg font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Total to Pay Now</span>
-                                        <span class="text-xl font-bold text-[#0071e3]">{{ currencySymbols[userCurrency] }}{{ (totalPrice + 49).toLocaleString() }}</span>
+                                        <span class="text-xl font-bold text-[#0071e3]">{{ currencySymbols[userCurrency] }}{{ (totalPrice + 59).toLocaleString() }}</span>
                                     </div>
                                 </div>
                             </div>

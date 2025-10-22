@@ -329,7 +329,7 @@ const features = [
         <!-- Main Content -->
         <main>
             <!-- Hero Section -->
-            <section class="relative overflow-hidden bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
+            <section class="relative overflow-hidden bg-white">
                 <div class="container mx-auto px-4 py-20 md:py-32">
                     <div class="grid md:grid-cols-2 gap-12 items-center">
                         <!-- Left: Content -->
@@ -340,27 +340,24 @@ const features = [
                                 </span>
                             </div>
                 <h1 class="text-4xl md:text-6xl font-bold leading-tight">
-                    20% OFF on All Products — Limited Time Only!
+                    Save 20% on Everything! Don't miss out — shop now before the deal ends!
                 </h1>
 
-                            <!-- Partner Image -->
-                            <div class="mt-6">
-                                <img
-                                    src="/images/partner.png"
-                                    alt="Partner"
-                                    class="h-16 md:h-20"
-                                />
-                            </div>
                         </div>
 
-                        <!-- Right: Image -->
+                        <!-- Right: Video -->
                         <div class="order-2 md:order-2">
-                            <div class="relative">
-                                <img
-                                    src="/images/orange_2.png"
-                                    alt="Product"
-                                    class="w-full h-auto max-w-md mx-auto"
-                                />
+                            <div class="relative -mt-8">
+                                <video
+                                    src="/images/videophon.mp4"
+                                    autoplay
+                                    muted
+                                    loop
+                                    playsinline
+                                    class="w-full h-auto max-w-xs mx-auto"
+                                >
+                                    Your browser does not support the video tag.
+                                </video>
                             </div>
                         </div>
                     </div>
@@ -440,6 +437,89 @@ const features = [
 
                             </div>
                         </Link>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Camera Features Section -->
+            <section class="py-20 bg-white">
+                <div class="container mx-auto px-4">
+                    <div class="max-w-4xl mx-auto text-center">
+                        <!-- Black Heading -->
+                        <h2 class="text-5xl md:text-6xl font-bold leading-tight mb-8 text-black">
+                            All 48MP rear cameras.
+                            <br>
+                            An evolution in resolution.
+                        </h2>
+
+                        <!-- Description Text -->
+                        <p class="text-lg md:text-xl text-gray-700 leading-relaxed text-left max-w-3xl mx-auto mb-12">
+                            iPhone 17 has a 48MP Fusion Main camera with a 2x optical-quality telephoto, and a <strong>48MP Fusion Ultra Wide camera with 4x the resolution</strong> of the Ultra Wide camera on iPhone 16. And now, Ultra Wide photos are 24MP by default, the perfect file size for high-quality storing and sharing. So you'll get stunning, super-high-resolution shots — up close or far away, indoors and out, in conditions that go from bright to low light. And at 256GB, it has <strong>double the starting storage</strong> of the previous model.⁶ So you can capture to your heart's content — and beyond.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Full Width Phone Image -->
+            <section class="w-full">
+                <img
+                    src="/images/demophone.png"
+                    alt="iPhone Demo"
+                    class="w-full h-auto"
+                />
+            </section>
+
+            <!-- Camera Features Section -->
+            <section class="py-20 bg-white">
+                <div class="container mx-auto px-4">
+                    <div class="max-w-6xl mx-auto">
+                        <!-- Section Title -->
+                        <h2 class="text-5xl md:text-6xl font-bold text-black text-center mb-16">
+                            Smile. Snap. Share. Repeat.
+                        </h2>
+
+                        <!-- Features Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- 2x Telephoto Feature -->
+                            <div class="bg-white rounded-2xl overflow-hidden shadow-lg">
+                                <div class="relative">
+                                    <img
+                                        src="/images/pic-1.jpg"
+                                        alt="2x Telephoto Demo"
+                                        class="w-full h-80 object-cover"
+                                    />
+                                    <!-- Zoom Controls Overlay -->
+                                    <div class="absolute bottom-4 right-4 flex gap-2">
+                                        <div class="w-8 h-8 bg-black/20 rounded-full flex items-center justify-center text-white text-sm">.5</div>
+                                        <div class="w-8 h-8 bg-black/20 rounded-full flex items-center justify-center text-white text-sm">1</div>
+                                        <div class="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-black text-sm font-bold">2x</div>
+                                    </div>
+                                </div>
+                                <div class="p-6">
+                                    <h3 class="text-2xl font-bold text-black mb-3">2x Telephoto.</h3>
+                                    <p class="text-gray-700 text-lg">Close in or zoom out on your subjects with exceptional detail.</p>
+                                </div>
+                            </div>
+
+                            <!-- Clean Up Feature -->
+                            <div class="bg-white rounded-2xl overflow-hidden shadow-lg">
+                                <div class="relative">
+                                    <img
+                                        src="/images/pic-2.jpg"
+                                        alt="Clean Up Demo"
+                                        class="w-full h-80 object-cover"
+                                    />
+                                    <!-- Clean Up Highlight -->
+                                    <div class="absolute top-1/2 right-1/4 w-32 h-8 bg-white/90 rounded-lg flex items-center justify-center">
+                                        <span class="text-red-600 font-bold text-sm">BEWARE of DOG</span>
+                                    </div>
+                                </div>
+                                <div class="p-6">
+                                    <h3 class="text-2xl font-bold text-black mb-3">Clean Up.</h3>
+                                    <p class="text-gray-700 text-lg">Remove unwanted objects, people, and background distractions from your photos.²</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>

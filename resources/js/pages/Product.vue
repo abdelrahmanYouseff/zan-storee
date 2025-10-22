@@ -1014,7 +1014,7 @@ const reviews = computed(() => {
                             <div v-else class="space-y-2">
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-[#86868b] dark:text-[#a1a1a6]">Shipping Fee (Pay Now)</span>
-                                    <span class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{{ currencySymbols[userCurrency] }}50</span>
+                                    <span class="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{{ currencySymbols[userCurrency] }}59</span>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-[#86868b] dark:text-[#a1a1a6]">Product Amount (Pay on Delivery)</span>
@@ -1023,7 +1023,7 @@ const reviews = computed(() => {
                                 <div class="border-t border-[#d2d2d7] dark:border-[#424245] pt-2">
                                     <div class="flex justify-between items-center">
                                         <span class="text-lg font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Amount to Pay Now</span>
-                                        <span class="text-xl font-bold text-[#0071e3]">{{ currencySymbols[userCurrency] }}50</span>
+                                        <span class="text-xl font-bold text-[#0071e3]">{{ currencySymbols[userCurrency] }}59</span>
                                     </div>
                                     <p class="text-xs text-[#86868b] dark:text-[#a1a1a6] mt-1">Remaining {{ formatPrice(totalPrice) }} to be paid on delivery</p>
                                 </div>

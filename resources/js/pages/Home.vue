@@ -354,6 +354,7 @@ const features = [
                                     muted
                                     loop
                                     playsinline
+                                    webkit-playsinline
                                     class="w-full h-auto max-w-xs mx-auto"
                                 >
                                     Your browser does not support the video tag.
@@ -895,6 +896,24 @@ const features = [
 
     .text-center p {
         color: #000000 !important;
+    }
+
+    /* Force black color for chat messages on mobile */
+    .chat-messages p {
+        color: #000000 !important;
+    }
+
+    .chat-messages .text-gray-800 {
+        color: #000000 !important;
+    }
+
+    /* Force black color for chat input on mobile */
+    input[type="text"] {
+        color: #000000 !important;
+    }
+
+    input[type="text"]::placeholder {
+        color: #6b7280 !important;
     }
 }
 </style>

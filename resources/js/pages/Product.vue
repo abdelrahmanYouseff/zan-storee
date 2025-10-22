@@ -47,7 +47,7 @@ const userCurrency = ref('USD');
 const exchangeRates = ref({
     USD: 1,
     SAR: 3.75,
-    EGP: 30.85,
+    EGP: 47.54,
     AED: 3.67,
     EUR: 0.92,
     GBP: 0.79,

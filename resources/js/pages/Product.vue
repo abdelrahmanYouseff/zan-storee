@@ -653,6 +653,7 @@ const productData = computed(() => {
             paypal_cod_payment_url: 'https://www.paypal.com/ncp/payment/7WMANWRCHP896'
         };
     }
+    console.log('Product data from database:', props.product);
     return props.product;
 });
 
@@ -1109,14 +1110,14 @@ const reviews = computed(() => {
 
                     <div class="max-w-4xl mx-auto">
                         <p class="text-[#6e6e73] dark:text-[#a1a1a6] leading-relaxed text-lg text-center">
-                            Experience the future of mobile technology with the iPhone 17 Pro Max. Featuring the revolutionary A18 Pro chip, advanced camera system with 5x optical zoom, and titanium design crafted for ultimate durability and premium feel.
+                            {{ productData.description || 'Experience the future of mobile technology with the iPhone 17 Pro Max. Featuring the revolutionary A18 Pro chip, advanced camera system with 5x optical zoom, and titanium design crafted for ultimate durability and premium feel.' }}
                         </p>
                     </div>
                 </div>
 
 
-                <!-- Technical Specifications -->
-                <div class="mt-16 sm:mt-24">
+                <!-- Technical Specifications - Hidden -->
+                <!-- <div class="mt-16 sm:mt-24">
                     <div class="text-center mb-8 sm:mb-12">
                         <div class="inline-flex items-center gap-3 mb-4">
                             <div class="w-10 h-10 bg-gradient-to-r from-[#0071e3] to-[#0a84ff] rounded-xl flex items-center justify-center">
@@ -1156,10 +1157,53 @@ const reviews = computed(() => {
                                 </div>
                                 </div>
 
-                                <!-- Hover Effect -->
                                 <div class="mt-4 h-1 bg-gradient-to-r from-[#0071e3] to-[#0a84ff] rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                             </div>
                         </div>
+                    </div>
+                </div> -->
+
+                <!-- A19 Chip Section -->
+                <div class="mt-16 sm:mt-24">
+                    <div class="text-center mb-8 sm:mb-12">
+                        <h2 class="text-3xl sm:text-4xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7] mb-4">
+                            A19 chip. All-day battery life.
+                        </h2>
+                        <p class="text-lg text-[#6e6e73] dark:text-[#a1a1a6] max-w-2xl mx-auto">
+                            Powers everything you love about iPhone.
+                        </p>
+                    </div>
+
+                    <div class="max-w-6xl mx-auto">
+                        <img
+                            src="/images/cover.png"
+                            alt="A19 Chip Technology"
+                            class="w-full h-auto rounded-2xl shadow-lg"
+                            loading="lazy"
+                            onerror="console.log('Image failed to load:', this.src); this.style.display='none'"
+                        />
+                    </div>
+                </div>
+
+                <!-- iOS 26 Section -->
+                <div class="mt-16 sm:mt-24">
+                    <div class="text-center mb-8 sm:mb-12">
+                        <h2 class="text-3xl sm:text-4xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7] mb-4">
+                            iOS 26. New look.
+                        </h2>
+                        <p class="text-lg text-[#6e6e73] dark:text-[#a1a1a6] max-w-2xl mx-auto">
+                            Even more magic.
+                        </p>
+                    </div>
+
+                    <div class="max-w-6xl mx-auto">
+                        <img
+                            src="/images/cover-2.png"
+                            alt="iOS 26 New Look"
+                            class="w-full h-auto rounded-2xl shadow-lg"
+                            loading="lazy"
+                            onerror="console.log('Image failed to load:', this.src); this.style.display='none'"
+                        />
                     </div>
                 </div>
 
